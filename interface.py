@@ -22,7 +22,19 @@ class GUI:
         self.button_OK.bind('<Button-1>', self.click_button_OK)
 
     def click_button_OK(self,event):
-        win_2=Toplevel(self.root)
+        self.WIN_2()
+
+    def WIN_2(self):
+        win_2 = Toplevel(self.root)
+        win_2.title('Обрати константу')
+        win_2.geometry('450x300+100+60')
+        text3 = Label(win_2, text='формула диф оператора: ',
+                      width=30, font=('Times',12)).grid(column=0,row=0)
+        text4 = Label(win_2, text='C= ',
+                      width=10, font=('Times', 12)).grid(column=0, row=1)
+        c_entry=Entry(win_2, width=10, font=('Times', 12)).grid(column=1, row=1)
+        button_OK2 = Button(win_2, text='Застосувати', width=14, height=1, font=('Times', 10) ).grid(column=1, row=1)
+        button_OK2.bind('<Button-1>', self.click_button_OK)
 
 
 
