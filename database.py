@@ -33,6 +33,39 @@ class DataBase:
         self.process.close()
         return additional.Additional().clean_list(res)
 
+    def ShowTables(self):
+        # logs to console all tables names
+        self.process = sqlite3.connect('process.db')
+        cur = self.process.cursor()
+        cur.execute('SELECT distinct tbl_name FROM sqlite_master order by 1;')
+        res = cur.fetchall()
+        self.process.close()
+        print(res)
+
+    def SelectAllTable(self, table_name):
+        # logs to console all from table table_name
+        self.process = sqlite3.connect('process.db')
+        cur = self.process.cursor()
+        cur.execute(f'SELECT * FROM {table_name}')
+        res = cur.fetchall()
+        self.process.close()
+        for row in res:
+            print(row)
+
+    def ShowTable(self, table_name):
+        # logs to console structure of table table_name
+        self.process = sqlite3.connect('process.db')
+        cur = self.process.cursor()
+        print(f'SELECT sql FROM sqlite_master WHERE tbl_name = \'{table_name}\' AND type = \'table\';')
+        cur.execute(f'SELECT sql FROM sqlite_master WHERE tbl_name = \'{table_name}\' AND type = \'table\';')
+        res = cur.fetchall()
+        str_res = str(res)
+        res = str_res.split('\\n')
+        self.process.close()
+        for row in res:
+            print(row)
+
+
 '''
 db = DataBase()
 print(db.SelectProcessName())
