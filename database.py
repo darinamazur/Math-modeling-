@@ -1,4 +1,5 @@
 import sqlite3
+import additional
 
 class DataBase:
 
@@ -24,4 +25,15 @@ class DataBase:
         self.process.close()
 
 
+    def SelectProcessName(self):
+        self.process = sqlite3.connect('process.db')
+        cur = self.process.cursor()
+        cur.execute('SELECT DISTINCT (NAME) FROM PROCESS;')
+        res = cur.fetchall()
+        self.process.close()
+        return additional.Additional().clean_list(res)
 
+'''
+db = DataBase()
+print(db.SelectProcessName())
+'''
