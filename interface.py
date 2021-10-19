@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import*
 from tkinter import ttk
 from tkinter.ttk import Combobox
+from PIL import ImageTk, Image
 
 
 
@@ -27,8 +28,30 @@ class GUI:
         self.button_OK = Button(self.root, text='Застосувати', width=14, height=1, font=('Times', 10),
                                 bg='white', fg='black')
         self.button_OK.bind('<Button-1>', self.click_button_OK)
+
+
+
+
+
+
+
     def click_button_OK(self,event):
         self.WIN_2()
+        dim=self.list_dimensionally.get()
+        process=self.list_process.get()
+        index_process = database.db.SelectProcessName().index(process)
+        diff_operator=database.db.SelectDiffOperator(database.db.SelectProcessName()[index_process], dim)
+
+        #print(str(database.db.SelectDiffOperator(database.db.SelectProcessName()[0], dim)[0]))
+        #self.dict_process_ph={str(database.db.SelectDiffOperator(database.db.SelectProcessName()[0], dim)[0]) : 'diff_Laplasa.jpg'}
+        text3 = Label(self.root, text='формула диф оператора: ', width=50, font=('Times', 14)).pack(side=TOP)
+        text4 = Label(self.root, text=diff_operator, width=50, font=('Times', 14)).pack(side=TOP)
+        #dict1={'1':"diff_Laplasa.jpg"}
+        #fr=Frame(self.root)
+        #fr.pack(side=TOP)
+        #image1 = ImageTk.PhotoImage(Image.open("diff_Laplasa1.jpg"))
+        #panel1=Label(fr, image=image1).pack(side=TOP)
+        #text3 = Label(self.root, text=diff_operator,width=30, font=('Times', 14))
 
 
     def WIN_2(self):
@@ -46,6 +69,8 @@ class GUI:
         c_entry=Entry(win_2, width=10, font=('Times', 12)).grid(column=1, row=1)
         button_OK2 = Button(win_2, text='Застосувати', width=14, height=1, font=('Times', 10),command=click_button_OK2).grid(column=1, row=2)
 
+
+
     def WIN_3(self):
         self.win_3.title('Початкові значення')
         self.win_3.geometry('500x300+750+120')
@@ -60,8 +85,9 @@ class GUI:
     def draw_widgets(self):
         self.list_dimensionally.current(0)
         self.list_dimensionally.grid(column=1, row=0)
+        self.list_process.current(0)
         self.list_process.pack(side=TOP,padx=10, pady=0)
-        self.button_OK.pack(side=TOP, padx=10, pady=80)
+        self.button_OK.pack(side=TOP, padx=10, pady=20)
     def show_w(self):
         self.draw_widgets()
         self.root.mainloop()
