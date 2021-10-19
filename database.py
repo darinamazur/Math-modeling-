@@ -89,7 +89,7 @@ class DataBase:
             print(row)
 
 
-'''
+
 db = DataBase()
 print(db.SelectProcessName())
-'''
+
