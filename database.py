@@ -6,6 +6,7 @@ class DataBase:
     def __init__(self):
        self.process = sqlite3.connect('process.db')
 
+
     def CreateTable(self):
         self.process.execute('''CREATE TABLE PROCESS
                  (ID INT PRIMARY KEY     NOT NULL,
@@ -16,6 +17,30 @@ class DataBase:
 
         self.process.close()
 
+    def CreateTableFunc(self):
+        self.process.execute('''CREATE TABLE FUNCTIONS
+                 (ID INT PRIMARY KEY     NOT NULL,
+                 DIM    INT       NOT NULL,
+                 FUNC           TEXT    NOT NULL);''')
+        self.process.close()
+
+    def SelectFunc1(self):
+        self.process = sqlite3.connect('process.db')
+        cur = self.process.cursor()
+        cur.execute(f'SELECT FUNC FROM FUNCTIONS WHERE DIM = 1;')
+        res = cur.fetchall()
+        self.process.close()
+        return additional.Additional().clean_list(res)
+
+    def SelectFunc2(self):
+        self.process = sqlite3.connect('process.db')
+        cur = self.process.cursor()
+        cur.execute(f'SELECT FUNC FROM FUNCTIONS WHERE DIM = 2;')
+        res = cur.fetchall()
+        self.process.close()
+        return additional.Additional().clean_list(res)
+
+
     def Insert(self, number, dim, name, green_func, diff_oper):
         self.process = sqlite3.connect('process.db')
         self.process.execute(f"INSERT INTO PROCESS (ID, NAME, DIM, GREEN_FUNC, DIFF_OPERATOR)\
@@ -25,16 +50,17 @@ class DataBase:
         self.process.close()
 
 
-    def SelectProcessName(self):
+    def SelectProcessName(self, dim):
+    # returns list of strings of Processe`s names with apecidied NAME and DIM
         self.process = sqlite3.connect('process.db')
         cur = self.process.cursor()
-        cur.execute('SELECT DISTINCT (NAME) FROM PROCESS;')
+        cur.execute(f'SELECT DISTINCT (NAME) FROM PROCESS WHERE DIM = {dim};')
         res = cur.fetchall()
         self.process.close()
         return additional.Additional().clean_list(res)
 
     def SelectGreenFunction(self, name, dim):
-    # returns list of strings of Green functions with apecidied NAME and DIM
+    # returns list of strings of Green`s functions with apecidied NAME and DIM
         self.process = sqlite3.connect('process.db')
         cur = self.process.cursor()
         cur.execute(f'SELECT GREEN_FUNC FROM PROCESS WHERE NAME = \'{name}\' AND DIM = \'{dim}\';')
@@ -90,6 +116,6 @@ class DataBase:
 
 
 
-db = DataBase()
-print(db.SelectProcessName())
 
+# db = DataBase()
+# db.CreateTableFunc()
