@@ -134,8 +134,20 @@ class core:
 
 
     def G(self, x, y, t):
-        moddiff = math.sqrt((x)**2 + (y)**2) + t
-        return moddiff
+        moddiff = math.sqrt((x)**2 + (y)**2 + 0.000001)
+        # return numpy.heaviside(t - moddiff / -1, 1) / moddiff
+        c = 1
+        print(f't = {t} moddif = {moddiff}')
+        # print(t - moddiff / c)
+        # print(numpy.heaviside(t - moddiff / c, 1))
+        # print((c**2) * (t**2) - moddiff**2)
+        # print((2 * math.pi * c * math.sqrt((c**2) * (t**2) - moddiff**2)))
+        # print(numpy.heaviside(t - moddiff / c, 1) / (2 * math.pi * c * math.sqrt((c**2) * (t**2) - moddiff**2)))
+        tmp1 = t - moddiff / c
+        tmp2 = (c**2) * (t**2) - moddiff**2
+        tmp3 = 2 * math.pi * c * math.sqrt(abs(tmp2))
+        tmp4 = numpy.heaviside(tmp1, 1)
+        return  tmp4 / tmp3
 
     def f_obs(self, x, y, t):
         return self.func(x, y, t)
@@ -144,6 +156,7 @@ class core:
         return self.G(x - self.__get_m_pnt_x__(i), y - self.__get_m_pnt_y__(i), t - self.__get_m_pnt_t__(i))
 
     def get_b_i(self, i_arg, x, y, t):
+        # print(f'x: {x} y: {y} t: {t} f: {self.f_obs(x, y, t)}')
         return self.f_obs(x, y, t)
 
     def get_obs_area_t_from(self, i):
@@ -343,6 +356,49 @@ class core:
         return res
 
     def get_zero_integral_of_mult_2(self, i_arg, k):
+        t = 0
+        n = 50
+        pts_x = []
+        # pts_y = []
+        #
+        for i in range(0, self.get_obs_area_i_size(i_arg)):
+            pts_x.append(self.get_obs_area_i_j_x(i_arg, i))
+
+        x_a = min(pts_x)
+        x_b = max(pts_x)
+
+        # res_1 = 0
+        # for i in range(0, n):
+        #     cur_x = x_a + delta_x * (i + 0.5)
+        #     res_2 = 0
+        #     y_a = self.get_down_border(j_arg, cur_x)
+        #     y_b = self.get_up_border(j_arg, cur_x)
+        #     delta_y = (y_b - y_a) / n
+        #     for j in range(0, n):
+        #         cur_y = y_a + delta_y * (j + 0.5)
+        #         # B_k_i * B_k_j
+        #         res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, t)
+        #         res_2 += res_3 * delta_y
+        #     res_1 += res_2 * delta_x
+
+        delta_x = (x_b - x_a) / n
+        res_1 = 0
+        for i in range(0, n):
+            cur_x = x_a + delta_x * (i + 0.5)
+            res_2 = 0
+            y_a = self.get_down_border(i_arg, cur_x)
+            y_b = self.get_up_border(i_arg, cur_x)
+            delta_y = (y_b - y_a) / n
+            for j in range(0, n):
+                cur_y = y_a + delta_y * (j + 0.5)
+                # B_k_i * b_k
+                res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_b_i(k, cur_x, cur_y, t)
+                res_2 += res_3 * delta_y
+            res_1 += res_2 * delta_x
+
+        return res_1
+
+
         return 0
         # print("i: " + str(i_arg) + " k: " + str(k))
         t = 0
@@ -359,12 +415,6 @@ class core:
                 cur_y = y_a + h_y * (j + 0.5)
                 # B_k_i * b_k
                 res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_b_i(k, cur_x, cur_y, t)
-                # if debug:
-                #     print("zero")
-                #     print("i: " + str(i_arg) + " k: " + str(k) + " x: " + str(cur_x) + " y: " + str(cur_y) + " res: " + str(res_3))
-                #     print("part1: " + str(self.get_B_i_j(k, i_arg, cur_x, cur_y, t)))
-                #     print("part2: " + str(self.get_b_i(k, cur_x, cur_y, t)))
-
                 res_2 += res_3 * h_y
             res_1 += res_2 * h_x
 
@@ -472,10 +522,37 @@ class core:
         B_b = self.get_vec_B_b()
         P_2_inv = numpy.linalg.pinv(P_2)
         x_res = numpy.matmul(P_2_inv, B_b)
-        core.vecF = x_res
+        self.vecF = x_res
         print(x_res)
 
+    # def getUZero_sum(self, x, y, t):
+    #     sum = 0
+    #     for i in range(0, self.m0):
+    #         sum += calc.G(x, y, t, self.m0Pts[i, 0], self.m0Pts[i, 1], self.m0Pts[i, 2]) * self.vecF[i]
+    #     return sum
+    #
+    # def getUGran_sum(self, x, y, t):
+    #     sum = 0
+    #     for i in range(0, self.mg):
+    #         sum += calc.G(x, y, t, self.mgPts[i, 0], self.mgPts[i, 1], self.mgPts[i, 2]) * self.vecF[calc.m0 + i]
+    #     return sum
 
+    def get_f_modeled(self, x, y, t):
+        sum = 0
+        for i in range(0, len(self.m_pts)):
+            sum += self.G(x - self.__get_m_pnt_x__(i), y - self.__get_m_pnt_x__(i), t - self.__get_m_pnt_x__(i)) * self.vecF[i]
+        return sum
+
+    def get_f_modeled_meshgrid(self, X_arr, Y_arr, t):
+        res = numpy.zeros(X_arr.shape)
+        for i in range(X_arr.shape[0]):
+            for j in range(X_arr.shape[1]):
+                res[i][j] = self.get_f_modeled(X_arr[i][j], Y_arr[i][j], t)
+        return res
+
+    # def getUFull(self, x, y, t):
+    #     # print("getFullU",x,y,t)
+    #     return self.getUZero_sum(x, y, t) + self.getUGran_sum(x, y, t)
 
 
 
