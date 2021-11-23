@@ -6,9 +6,6 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 
 class core:
-    ZERO_OBS_AREA = 0
-    GRAN_OBS_AREA = 1
-
     def __init__(self):
         self.T = 0
         self.S_0 = []
@@ -18,7 +15,7 @@ class core:
         self.obs_poly = []
         self.m_pts = []
         self.m0_size = 0
-
+        self.green_is_setted = False
 
         # return 1
 
@@ -42,6 +39,10 @@ class core:
     def set_observation_function(self, func):
         self.func = func
 
+    def set_green_function(self, func):
+        self.G_func = func
+        self.green_is_setted = True
+
     def get_T(self):
         return self.T
 
@@ -55,7 +56,7 @@ class core:
 #                 Editing of observation areas
 # ============================================================
 
-    def push_observation_area(self, area, type=0):
+    def push_observation_area(self, area):
         self.obs.append(area)
         self.obs_poly.append(polygon.polygon(area[0]))
         return True
@@ -107,7 +108,7 @@ class core:
         # Guaranteed that result is same as after solve()
         # Required to use solve() before using of this functions
         # It just gives already solved result to you, but did not solves a problem
-        return 1
+        return self.vecF
 
 # ============================================================
 #                       Error handling
@@ -132,21 +133,24 @@ class core:
         return len(self.m_pts)
 
     def G(self, x, y, t):
-        moddiff = math.sqrt((y)**2 + (x)**2 + 0.000001)
-        return - 1.0 / (2.0 * math.pi) * math.log(1.0 / moddiff)
-        # return numpy.heaviside(t - moddiff / -1, 1) / moddiff
-        c = -0.02
-        # print(f't = {t} moddif = {moddiff}')
-        # print(t - moddiff / c)
-        # print(numpy.heaviside(t - moddiff / c, 1))
-        # print((c**2) * (t**2) - moddiff**2)
-        # print((2 * math.pi * c * math.sqrt((c**2) * (t**2) - moddiff**2)))
-        # print(numpy.heaviside(t - moddiff / c, 1) / (2 * math.pi * c * math.sqrt((c**2) * (t**2) - moddiff**2)))
-        tmp1 = t - moddiff / c
-        tmp2 = (c**2) * (t**2) - moddiff**2
-        tmp3 = 2.0 * math.pi * c * math.sqrt(abs(tmp2))
-        tmp4 = numpy.heaviside(tmp1, 1.0)
-        return  tmp4 / tmp3
+        if self.green_is_setted:
+            return self.G_func(x, y, t)
+        else:
+            moddiff = math.sqrt((y)**2 + (x)**2 + 0.000001)
+            return - 1.0 / (2.0 * math.pi) * math.log(1.0 / moddiff)
+            # return numpy.heaviside(t - moddiff / -1, 1) / moddiff
+            c = -0.02
+            # print(f't = {t} moddif = {moddiff}')
+            # print(t - moddiff / c)
+            # print(numpy.heaviside(t - moddiff / c, 1))
+            # print((c**2) * (t**2) - moddiff**2)
+            # print((2 * math.pi * c * math.sqrt((c**2) * (t**2) - moddiff**2)))
+            # print(numpy.heaviside(t - moddiff / c, 1) / (2 * math.pi * c * math.sqrt((c**2) * (t**2) - moddiff**2)))
+            tmp1 = t - moddiff / c
+            tmp2 = (c**2) * (t**2) - moddiff**2
+            tmp3 = 2.0 * math.pi * c * math.sqrt(abs(tmp2))
+            tmp4 = numpy.heaviside(tmp1, 1.0)
+            return  tmp4 / tmp3
 
     def f_obs(self, x, y, t):
         return self.func(x, y, t)
@@ -234,7 +238,7 @@ class core:
         t = 0
         n = 50
         cur_poly = self.obs_poly[j_arg]
-        print(cur_poly)
+        # print(cur_poly)
 
         x_a = cur_poly.get_x_min()
         x_b = cur_poly.get_x_max()
@@ -259,13 +263,13 @@ class core:
         cur_poly = self.obs_poly[k]
         cur_obs = self.get_obs_area_i(k)
         n = 20
-        print(cur_obs)
+        # print(cur_obs)
         t_a = cur_obs[1][0]
         t_b = cur_obs[1][1]
         step_t = (t_b - t_a) / n
 
         pnt_seq = cur_poly.get_contour_sequence()
-        print(pnt_seq)
+        # print(pnt_seq)
 
         res_full = 0
         for j in range(0, n):
@@ -394,13 +398,13 @@ class core:
         cur_poly = self.obs_poly[k]
         cur_obs = self.get_obs_area_i(k)
         n = 20
-        print(cur_obs)
+        # print(cur_obs)
         t_a = cur_obs[1][0]
         t_b = cur_obs[1][1]
         step_t = (t_b - t_a) / n
 
         pnt_seq = cur_poly.get_contour_sequence()
-        print(pnt_seq)
+        # print(pnt_seq)
 
         res_full = 0
         for j in range(0, n):
@@ -517,6 +521,7 @@ class core:
         x_res = numpy.matmul(P_2_inv, B_b)
         self.vecF = x_res
         print(x_res)
+        return self.vecF
 
     # def getUZero_sum(self, x, y, t):
     #     sum = 0
@@ -532,8 +537,9 @@ class core:
 
     def get_f_modeled(self, x, y, t):
         sum = 0
-        for i in range(0, len(self.m_pts)):
-            sum += self.G(x - self.__get_m_pnt_x__(i), y - self.__get_m_pnt_x__(i), t - self.__get_m_pnt_x__(i)) * self.vecF[i]
+        if self.S_0_poly.contains_point(x, y):
+            for i in range(0, len(self.m_pts)):
+                sum += self.G(x - self.__get_m_pnt_x__(i), y - self.__get_m_pnt_x__(i), t - self.__get_m_pnt_x__(i)) * self.vecF[i]
         return sum
 
     def get_f_modeled_meshgrid(self, X_arr, Y_arr, t):
@@ -547,10 +553,10 @@ class core:
     #     # print("getFullU",x,y,t)
     #     return self.getUZero_sum(x, y, t) + self.getUGran_sum(x, y, t)
 
-    def print_py_plot(self, time):
+    def print_py_plot(self, time, points = 30):
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-        x = numpy.linspace(0, 2, 30)
-        y = numpy.linspace(0, 2, 30)
+        x = numpy.linspace(self.S_0_poly.get_x_min(), self.S_0_poly.get_x_max(), points)
+        y = numpy.linspace(self.S_0_poly.get_y_min(), self.S_0_poly.get_y_max(), points)
         t = time
 
         X, Y = numpy.meshgrid(x, y)
@@ -559,7 +565,6 @@ class core:
 
         surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
         ax.plot_wireframe(X, Y, Z_2, rstride=3, cstride=3)
-        # surf = ax.plot_wireframe(X, Y, Z)
 
         plt.title(f't = {t}')
         plt.xlabel('x')

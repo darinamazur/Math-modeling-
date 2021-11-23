@@ -90,6 +90,11 @@ class polygon:
     def get_x_max(self):
         return self.sorted_arr[self.x_max_ind][0]
 
+    def get_y_min(self):
+        return self.sorted_arr[self.y_min_ind][1]
+    def get_y_max(self):
+        return self.sorted_arr[self.y_max_ind][1]
+
     def get_contour_length(self):
         res = 0
         for i in range(0, self.size - 1):
@@ -127,4 +132,9 @@ class polygon:
                         tmp_y = y_cur + step_p * (i + 0.5)
                         res_arr.insert(0, [x_cur, tmp_y, step_len])
         return res_arr
+
+    def contains_point(self, x, y):
+        if x > self.get_x_max() or x < self.get_x_min():
+            return False
+        return self.get_top_border(x) >= y and self.get_bottom_border(x) <= y
 
