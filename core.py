@@ -1,5 +1,9 @@
 import math
 import numpy
+import polygon
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
 
 class core:
     ZERO_OBS_AREA = 0
@@ -11,6 +15,7 @@ class core:
         # self.obs_0 = []
         # self.obs_g = []
         self.obs = []
+        self.obs_poly = []
         self.m_pts = []
         self.m0_size = 0
 
@@ -32,6 +37,7 @@ class core:
 
     def set_S_0(self, S_0_array):
         self.S_0 = S_0_array
+        self.S_0_poly = polygon.polygon(self.S_0)
 
     def set_observation_function(self, func):
         self.func = func
@@ -50,13 +56,8 @@ class core:
 # ============================================================
 
     def push_observation_area(self, area, type=0):
-        # if type == core.ZERO_OBS_AREA:
-        #     self.obs_0.append(area)
-        #     return True
-        # elif type == core.GRAN_OBS_AREA:
-        #     self.obs_g.append(area)
-        #     return True
         self.obs.append(area)
+        self.obs_poly.append(polygon.polygon(area[0]))
         return True
 
 
@@ -130,14 +131,12 @@ class core:
     def __get_m_size__(self):
         return len(self.m_pts)
 
-
-
-
     def G(self, x, y, t):
-        moddiff = math.sqrt((x)**2 + (y)**2 + 0.000001)
+        moddiff = math.sqrt((y)**2 + (x)**2 + 0.000001)
+        return - 1.0 / (2.0 * math.pi) * math.log(1.0 / moddiff)
         # return numpy.heaviside(t - moddiff / -1, 1) / moddiff
-        c = 1
-        print(f't = {t} moddif = {moddiff}')
+        c = -0.02
+        # print(f't = {t} moddif = {moddiff}')
         # print(t - moddiff / c)
         # print(numpy.heaviside(t - moddiff / c, 1))
         # print((c**2) * (t**2) - moddiff**2)
@@ -145,8 +144,8 @@ class core:
         # print(numpy.heaviside(t - moddiff / c, 1) / (2 * math.pi * c * math.sqrt((c**2) * (t**2) - moddiff**2)))
         tmp1 = t - moddiff / c
         tmp2 = (c**2) * (t**2) - moddiff**2
-        tmp3 = 2 * math.pi * c * math.sqrt(abs(tmp2))
-        tmp4 = numpy.heaviside(tmp1, 1)
+        tmp3 = 2.0 * math.pi * c * math.sqrt(abs(tmp2))
+        tmp4 = numpy.heaviside(tmp1, 1.0)
         return  tmp4 / tmp3
 
     def f_obs(self, x, y, t):
@@ -171,109 +170,82 @@ class core:
     def get_obs_area_i_j(self, i, j):
         return self.obs[i][0][j]
 
+    def get_obs_area_i(self, i):
+        return self.obs[i]
+
     def get_obs_area_i_j_x(self, i, j):
         return self.get_obs_area_i_j(i, j)[0]
 
     def get_obs_area_i_j_y(self, i, j):
         return self.get_obs_area_i_j(i, j)[1]
 
-    def get_up_border(self, j_arg, x):
-        pts_x = []
-        pts_y = []
-        for i in range(0, self.get_obs_area_i_size(j_arg)):
-            pts_x.append(self.get_obs_area_i_j_x(j_arg, i))
-            pts_y.append(self.get_obs_area_i_j_y(j_arg, i))
-
-        ind = []
-        for i in range(0, len(pts_x) - 1):
-            if x > pts_x[i] and x > pts_x[i + 1]:
-                ind.append(i)
-        if x > pts_x[len(pts_x) - 1] and x > pts_x[0]:
-            ind.append(i)
-        val = []
-        for i in range(0, len(ind)):
-            ind_cur = ind[i]
-            ind_next = ind[i] + 1
-            if ind_next > len(pts_x):
-                ind_next = 0
-            if pts_x[ind_cur] != pts_x[ind_next]:
-                val.append(pts_y[ind_cur] + (x - pts_x[ind_cur]) * (pts_y[ind_next] - pts_y[ind_cur]) / (pts_x[ind_next] - pts_x[ind_cur]))
-            else:
-                val.append(max(pts_y[ind_cur], pts_y[ind_next]))
-
-        return max(val)
-
-    def get_down_border(self, j_arg, x):
-        pts_x = []
-        pts_y = []
-        for i in range(0, self.get_obs_area_i_size(j_arg)):
-            pts_x.append(self.get_obs_area_i_j_x(j_arg, i))
-            pts_y.append(self.get_obs_area_i_j_y(j_arg, i))
-
-        ind = []
-        for i in range(0, len(pts_x) - 1):
-            if x > pts_x[i] and x > pts_x[i + 1]:
-                ind.append(i)
-        if x > pts_x[len(pts_x) - 1] and x > pts_x[0]:
-            ind.append(i)
-        val = []
-        for i in range(0, len(ind)):
-            ind_cur = ind[i]
-            ind_next = ind[i] + 1
-            if ind_next > len(pts_x):
-                ind_next = 0
-            if pts_x[ind_cur] != pts_x[ind_next]:
-                val.append(pts_y[ind_cur] + (x - pts_x[ind_cur]) * (pts_y[ind_next] - pts_y[ind_cur]) / (pts_x[ind_next] - pts_x[ind_cur]))
-            else:
-                val.append(min(pts_y[ind_cur], pts_y[ind_next]))
-        return min(val)
+    # def get_up_border(self, j_arg, x):
+    #     pts_x = []
+    #     pts_y = []
+    #     for i in range(0, self.get_obs_area_i_size(j_arg)):
+    #         pts_x.append(self.get_obs_area_i_j_x(j_arg, i))
+    #         pts_y.append(self.get_obs_area_i_j_y(j_arg, i))
+    #
+    #     ind = []
+    #     for i in range(0, len(pts_x) - 1):
+    #         if x > pts_x[i] and x > pts_x[i + 1]:
+    #             ind.append(i)
+    #     if x > pts_x[len(pts_x) - 1] and x > pts_x[0]:
+    #         ind.append(i)
+    #     val = []
+    #     for i in range(0, len(ind)):
+    #         ind_cur = ind[i]
+    #         ind_next = ind[i] + 1
+    #         if ind_next > len(pts_x):
+    #             ind_next = 0
+    #         if pts_x[ind_cur] != pts_x[ind_next]:
+    #             val.append(pts_y[ind_cur] + (x - pts_x[ind_cur]) * (pts_y[ind_next] - pts_y[ind_cur]) / (pts_x[ind_next] - pts_x[ind_cur]))
+    #         else:
+    #             val.append(max(pts_y[ind_cur], pts_y[ind_next]))
+    #
+    #     return max(val)
+    #
+    # def get_down_border(self, j_arg, x):
+    #     pts_x = []
+    #     pts_y = []
+    #     for i in range(0, self.get_obs_area_i_size(j_arg)):
+    #         pts_x.append(self.get_obs_area_i_j_x(j_arg, i))
+    #         pts_y.append(self.get_obs_area_i_j_y(j_arg, i))
+    #
+    #     ind = []
+    #     for i in range(0, len(pts_x) - 1):
+    #         if x > pts_x[i] and x > pts_x[i + 1]:
+    #             ind.append(i)
+    #     if x > pts_x[len(pts_x) - 1] and x > pts_x[0]:
+    #         ind.append(i)
+    #     val = []
+    #     for i in range(0, len(ind)):
+    #         ind_cur = ind[i]
+    #         ind_next = ind[i] + 1
+    #         if ind_next > len(pts_x):
+    #             ind_next = 0
+    #         if pts_x[ind_cur] != pts_x[ind_next]:
+    #             val.append(pts_y[ind_cur] + (x - pts_x[ind_cur]) * (pts_y[ind_next] - pts_y[ind_cur]) / (pts_x[ind_next] - pts_x[ind_cur]))
+    #         else:
+    #             val.append(min(pts_y[ind_cur], pts_y[ind_next]))
+    #     return min(val)
 
     def get_zero_integral_of_mult(self, i_arg, j_arg, k):
         t = 0
         n = 50
-        pts_x = []
-        # pts_y = []
-        #
-        for i in range(0, self.get_obs_area_i_size(j_arg)):
-            pts_x.append(self.get_obs_area_i_j_x(j_arg, i))
-        #     pts_y.append(self.get_obs_area_i_j_y(j_arg, i))
-        #
-        # x_minimal = min(pts_x)
-        # tmp = 0
-        # for i in range(0, len(pts_x)):
-        #     if pts_x[i] == x_minimal:
-        #         tmp = i
-        #         break
-        # if tmp != 0:
-        #     new_x = []
-        #     new_y = []
-        #     for i in range(tmp, len(pts_x)):
-        #         new_x.append(pts_x[i])
-        #         new_y.append(pts_y[i])
-        #     for i in range(0, tmp):
-        #         new_x.append(pts_x[i])
-        #         new_y.append(pts_y[i])
-        #     pts_x = new_x
-        #     pts_y = new_y
-        # min_ind = 0
-        # max_ind = 0
-        # x_maximal = max(pts_x)
-        # for i in range(0, len(pts_x)):
-        #     if pts_x[i] == x_maximal:
-        #         max_ind = i
-        #         break
+        cur_poly = self.obs_poly[j_arg]
+        print(cur_poly)
 
-        x_a = min(pts_x)
-        x_b = max(pts_x)
-
+        x_a = cur_poly.get_x_min()
+        x_b = cur_poly.get_x_max()
         delta_x = (x_b - x_a) / n
 
         res_1 = 0
         for i in range(0, n):
             cur_x = x_a + delta_x * (i + 0.5)
             res_2 = 0
-            y_a = self.get_down_border(j_arg, cur_x)
-            y_b = self.get_up_border(j_arg, cur_x)
+            y_a = cur_poly.get_bottom_border(cur_x)
+            y_b = cur_poly.get_top_border(cur_x)
             delta_y = (y_b - y_a) / n
             for j in range(0, n):
                 cur_y = y_a + delta_y * (j + 0.5)
@@ -281,70 +253,86 @@ class core:
                 res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, t)
                 res_2 += res_3 * delta_y
             res_1 += res_2 * delta_x
-
         return res_1
 
     def get_gran_integral_of_mult(self, i_arg, j_arg, k):
-        return 0
-        # t = 0
+        cur_poly = self.obs_poly[k]
+        cur_obs = self.get_obs_area_i(k)
         n = 20
-        t_a = 0
-        h_t = (core.T - t_a) / n
-        x_a = 0
-        y_a = 0
-        h_x = (core.x1 - x_a) / n
-        h_y = (core.x2 - y_a) / n
-        res_1 = 0
+        print(cur_obs)
+        t_a = cur_obs[1][0]
+        t_b = cur_obs[1][1]
+        step_t = (t_b - t_a) / n
 
-        for i in range(0, n):
-            cur_t = t_a + h_t * (i + 0.5)
-            res_2 = 0
+        pnt_seq = cur_poly.get_contour_sequence()
+        print(pnt_seq)
 
-            # 1 - (0;0) -> (x1;0)
-            cur_y = 0
-            res_3 = 0
-            for j in range(0, n):
-                cur_x = x_a + h_x * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_x
-            res_2 += res_3
+        res_full = 0
+        for j in range(0, n):
+            cur_t = t_a + step_t * (j + 0.5)
+            res_part = 0
+            for i in range(0, len(pnt_seq)):
+                cur_x = pnt_seq[i][0]
+                cur_y = pnt_seq[i][1]
+                # print(f'k = {k} i_arg = {i_arg} j_arg = {j_arg} cur_x = {cur_x} cur_y = {cur_y} cur_t = {cur_t}')
+                res_cur = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
+                res_part += pnt_seq[i][2] * res_cur
+            res_full += res_part * step_t
+        return res_full
 
-            # 2 - (x1;0) -> (x1;x2)
-            cur_x = core.x1
-            res_3 = 0
-            for j in range(0, n):
-                cur_y = y_a + h_y * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_y
-            res_2 += res_3
 
-            # 3 - (x1;x2) -> (0;x2)
-            cur_y = core.x2
-            res_3 = 0
-            for j in range(0, n):
-                cur_x = core.x1 - h_x * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_x
-            res_2 += res_3
 
-            # 4 - (0;x2) -> (0;0)
-            cur_x = 0
-            res_3 = 0
-            for j in range(0, n):
-                cur_y = core.x2 - h_y * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_y
-            res_2 += res_3
 
-            res_1 += res_2 * h_t
-
-        return res_1
+        # for i in range(0, n):
+        #     cur_t = t_a + h_t * (i + 0.5)
+        #     res_2 = 0
+        #
+        #     # 1 - (0;0) -> (x1;0)
+        #     cur_y = 0
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_x = x_a + h_x * (i + 0.5)
+        #
+        #         res_3 += res_4 * h_x
+        #     res_2 += res_3
+        #
+        #     # 2 - (x1;0) -> (x1;x2)
+        #     cur_x = core.x1
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_y = y_a + h_y * (i + 0.5)
+        #         res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
+        #         res_3 += res_4 * h_y
+        #     res_2 += res_3
+        #
+        #     # 3 - (x1;x2) -> (0;x2)
+        #     cur_y = core.x2
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_x = core.x1 - h_x * (i + 0.5)
+        #         res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
+        #         res_3 += res_4 * h_x
+        #     res_2 += res_3
+        #
+        #     # 4 - (0;x2) -> (0;0)
+        #     cur_x = 0
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_y = core.x2 - h_y * (i + 0.5)
+        #         res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, cur_t)
+        #         res_3 += res_4 * h_y
+        #     res_2 += res_3
+        #
+        #     res_1 += res_2 * h_t
+        #
+        # return res_1
 
     def get_c_i_j(self, i_arg, j_arg):
         res = 0
         for k in range(0, self.get_m0_size()):
             res += self.get_zero_integral_of_mult(i_arg, j_arg, k)
         for k in range(self.get_m0_size(), self.__get_m_size__()):
+            # print(f'k = {k} m0 = {self.get_m0_size()} m = {self.__get_m_size__()}')
             res += self.get_gran_integral_of_mult(i_arg, j_arg, k)
         return res
 
@@ -358,36 +346,18 @@ class core:
     def get_zero_integral_of_mult_2(self, i_arg, k):
         t = 0
         n = 50
-        pts_x = []
-        # pts_y = []
-        #
-        for i in range(0, self.get_obs_area_i_size(i_arg)):
-            pts_x.append(self.get_obs_area_i_j_x(i_arg, i))
+        cur_poly = self.obs_poly[i_arg]
 
-        x_a = min(pts_x)
-        x_b = max(pts_x)
-
-        # res_1 = 0
-        # for i in range(0, n):
-        #     cur_x = x_a + delta_x * (i + 0.5)
-        #     res_2 = 0
-        #     y_a = self.get_down_border(j_arg, cur_x)
-        #     y_b = self.get_up_border(j_arg, cur_x)
-        #     delta_y = (y_b - y_a) / n
-        #     for j in range(0, n):
-        #         cur_y = y_a + delta_y * (j + 0.5)
-        #         # B_k_i * B_k_j
-        #         res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_B_i_j(k, j_arg, cur_x, cur_y, t)
-        #         res_2 += res_3 * delta_y
-        #     res_1 += res_2 * delta_x
+        x_a = cur_poly.get_x_min()
+        x_b = cur_poly.get_x_max()
 
         delta_x = (x_b - x_a) / n
         res_1 = 0
         for i in range(0, n):
             cur_x = x_a + delta_x * (i + 0.5)
             res_2 = 0
-            y_a = self.get_down_border(i_arg, cur_x)
-            y_b = self.get_up_border(i_arg, cur_x)
+            y_a = cur_poly.get_bottom_border(cur_x)
+            y_b = cur_poly.get_top_border(cur_x)
             delta_y = (y_b - y_a) / n
             for j in range(0, n):
                 cur_y = y_a + delta_y * (j + 0.5)
@@ -399,109 +369,132 @@ class core:
         return res_1
 
 
-        return 0
-        # print("i: " + str(i_arg) + " k: " + str(k))
-        t = 0
-        n = 20
-        x_a = 0
-        y_a = 0
-        h_x = (core.x1 - x_a) / n
-        h_y = (core.x2 - y_a) / n
-        res_1 = 0
-        for i in range(0, n):
-            cur_x = x_a + h_x * (i + 0.5)
-            res_2 = 0
-            for j in range(0, n):
-                cur_y = y_a + h_y * (j + 0.5)
-                # B_k_i * b_k
-                res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_b_i(k, cur_x, cur_y, t)
-                res_2 += res_3 * h_y
-            res_1 += res_2 * h_x
-
-        return res_1
+        # return 0
+        # # print("i: " + str(i_arg) + " k: " + str(k))
+        # t = 0
+        # n = 20
+        # x_a = 0
+        # y_a = 0
+        # h_x = (core.x1 - x_a) / n
+        # h_y = (core.x2 - y_a) / n
+        # res_1 = 0
+        # for i in range(0, n):
+        #     cur_x = x_a + h_x * (i + 0.5)
+        #     res_2 = 0
+        #     for j in range(0, n):
+        #         cur_y = y_a + h_y * (j + 0.5)
+        #         # B_k_i * b_k
+        #         res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_b_i(k, cur_x, cur_y, t)
+        #         res_2 += res_3 * h_y
+        #     res_1 += res_2 * h_x
+        #
+        # return res_1
 
     def get_gran_integral_of_mult_2(self, i_arg, k):
-        return 0
+        cur_poly = self.obs_poly[k]
+        cur_obs = self.get_obs_area_i(k)
         n = 20
-        t_a = 0
-        h_t = (core.T - t_a) / n
-        x_a = 0
-        y_a = 0
-        h_x = (core.x1 - x_a) / n
-        h_y = (core.x2 - y_a) / n
-        res_1 = 0
+        print(cur_obs)
+        t_a = cur_obs[1][0]
+        t_b = cur_obs[1][1]
+        step_t = (t_b - t_a) / n
 
-        for i in range(0, n):
-            cur_t = t_a + h_t * (i + 0.5)
-            res_2 = 0
+        pnt_seq = cur_poly.get_contour_sequence()
+        print(pnt_seq)
 
-            # 1 - (0;0) -> (x1;0)
-            cur_y = 0
-            res_3 = 0
-            for j in range(0, n):
-                cur_x = x_a + h_x * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_x
-            res_2 += res_3
+        res_full = 0
+        for j in range(0, n):
+            cur_t = t_a + step_t * (j + 0.5)
+            res_part = 0
+            for i in range(0, len(pnt_seq)):
+                cur_x = pnt_seq[i][0]
+                cur_y = pnt_seq[i][1]
+                res_cur = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
+                res_part += pnt_seq[i][2] * res_cur
+            res_full += res_part * step_t
+        return res_full
 
-            # 2 - (x1;0) -> (x1;x2)
-            cur_x = core.x1
-            res_3 = 0
-            for j in range(0, n):
-                cur_y = y_a + h_y * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_y
-            res_2 += res_3
-
-            # 3 - (x1;x2) -> (0;x2)
-            cur_y = core.x2
-            res_3 = 0
-            for j in range(0, n):
-                cur_x = core.x1 - h_x * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_x
-            res_2 += res_3
-
-            # 4 - (0;x2) -> (0;0)
-            cur_x = 0
-            res_3 = 0
-            for j in range(0, n):
-                cur_y = core.x2 - h_y * (i + 0.5)
-                res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
-                res_3 += res_4 * h_y
-
-            res_2 += res_3
-
-            res_1 += res_2 * h_t
-
-            # if debug:
-            #     print("gran")
-            #     print("i: " + str(i_arg) + " k: " + str(k) + " x: " + str(cur_x) + " y: " + str(cur_y) + " t: " + str(cur_t) + " res: " + str(
-            #         res_3))
-            #     print("part1: " + str(self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t)))
-            #     print("part2: " + str(self.get_b_i(k, cur_x, cur_y, cur_t)))
-
-        return res_1
-
-        t = 0
-        n = 20
-        x_a = 0
-        y_a = 0
-        h_x = (core.x1 - x_a) / n
-        h_y = (core.x2 - y_a) / n
-        res_1 = 0
-        for i in range(0, n):
-            cur_x = x_a + h_x * (i + 0.5)
-            res_2 = 0
-            for j in range(0, n):
-                cur_y = y_a + h_y * (j + 0.5)
-                # B_k_i * B_k_j
-                res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_b_i(k, cur_x, cur_y, t)
-                res_2 += res_3 * h_y
-
-            res_1 += res_2 * h_x
-
-        return res_1
+        # return 0
+        # n = 20
+        # t_a = 0
+        # h_t = (core.T - t_a) / n
+        # x_a = 0
+        # y_a = 0
+        # h_x = (core.x1 - x_a) / n
+        # h_y = (core.x2 - y_a) / n
+        # res_1 = 0
+        #
+        # for i in range(0, n):
+        #     cur_t = t_a + h_t * (i + 0.5)
+        #     res_2 = 0
+        #
+        #     # 1 - (0;0) -> (x1;0)
+        #     cur_y = 0
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_x = x_a + h_x * (i + 0.5)
+        #
+        #         res_3 += res_4 * h_x
+        #     res_2 += res_3
+        #
+        #     # 2 - (x1;0) -> (x1;x2)
+        #     cur_x = core.x1
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_y = y_a + h_y * (i + 0.5)
+        #         res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
+        #         res_3 += res_4 * h_y
+        #     res_2 += res_3
+        #
+        #     # 3 - (x1;x2) -> (0;x2)
+        #     cur_y = core.x2
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_x = core.x1 - h_x * (i + 0.5)
+        #         res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
+        #         res_3 += res_4 * h_x
+        #     res_2 += res_3
+        #
+        #     # 4 - (0;x2) -> (0;0)
+        #     cur_x = 0
+        #     res_3 = 0
+        #     for j in range(0, n):
+        #         cur_y = core.x2 - h_y * (i + 0.5)
+        #         res_4 = self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t) * self.get_b_i(k, cur_x, cur_y, cur_t)
+        #         res_3 += res_4 * h_y
+        #
+        #     res_2 += res_3
+        #
+        #     res_1 += res_2 * h_t
+        #
+        #     # if debug:
+        #     #     print("gran")
+        #     #     print("i: " + str(i_arg) + " k: " + str(k) + " x: " + str(cur_x) + " y: " + str(cur_y) + " t: " + str(cur_t) + " res: " + str(
+        #     #         res_3))
+        #     #     print("part1: " + str(self.get_B_i_j(k, i_arg, cur_x, cur_y, cur_t)))
+        #     #     print("part2: " + str(self.get_b_i(k, cur_x, cur_y, cur_t)))
+        #
+        # return res_1
+        #
+        # t = 0
+        # n = 20
+        # x_a = 0
+        # y_a = 0
+        # h_x = (core.x1 - x_a) / n
+        # h_y = (core.x2 - y_a) / n
+        # res_1 = 0
+        # for i in range(0, n):
+        #     cur_x = x_a + h_x * (i + 0.5)
+        #     res_2 = 0
+        #     for j in range(0, n):
+        #         cur_y = y_a + h_y * (j + 0.5)
+        #         # B_k_i * B_k_j
+        #         res_3 = self.get_B_i_j(k, i_arg, cur_x, cur_y, t) * self.get_b_i(k, cur_x, cur_y, t)
+        #         res_2 += res_3 * h_y
+        #
+        #     res_1 += res_2 * h_x
+        #
+        # return res_1
 
     def get_B_b_i(self, i_arg):
         res = 0
@@ -554,6 +547,26 @@ class core:
     #     # print("getFullU",x,y,t)
     #     return self.getUZero_sum(x, y, t) + self.getUGran_sum(x, y, t)
 
+    def print_py_plot(self, time):
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+        x = numpy.linspace(0, 2, 30)
+        y = numpy.linspace(0, 2, 30)
+        t = time
+
+        X, Y = numpy.meshgrid(x, y)
+        Z = self.get_f_modeled_meshgrid(X, Y, t)
+        Z_2 = self.f_obs(X, Y, t)
+
+        surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+        ax.plot_wireframe(X, Y, Z_2, rstride=3, cstride=3)
+        # surf = ax.plot_wireframe(X, Y, Z)
+
+        plt.title(f't = {t}')
+        plt.xlabel('x')
+        plt.ylabel('y')
+
+        fig.colorbar(surf, shrink=0.5, aspect=5)
+        plt.show()
 
 
 

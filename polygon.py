@@ -1,8 +1,4 @@
-
-
-
-
-
+import math
 class polygon:
 
     def __init__(self, arr):
@@ -88,4 +84,47 @@ class polygon:
                 else:
                     return min(self.sorted_arr[i][1], self.sorted_arr[i + 1][1])
         exit(3)
+
+    def get_x_min(self):
+        return self.sorted_arr[self.x_min_ind][0]
+    def get_x_max(self):
+        return self.sorted_arr[self.x_max_ind][0]
+
+    def get_contour_length(self):
+        res = 0
+        for i in range(0, self.size - 1):
+            res += math.sqrt((self.sorted_arr[i][0] - self.sorted_arr[i + 1][0]) ** 2 + (self.sorted_arr[i][1] - self.sorted_arr[i + 1][1]) ** 2)
+        return res
+
+    def get_contour_sequence(self, dpi=10):
+        # returns 2d-array with 1-dimension length same as points in array,
+        # second dimension have length 3, contains x, y, multiplier constant
+        n = math.ceil(self.get_contour_length() * dpi)
+        res_arr = []
+        for i in range(0, self.size - 1):
+            x_cur = self.sorted_arr[i][0]
+            x_next = self.sorted_arr[i + 1][0]
+            y_cur = self.sorted_arr[i][1]
+            y_next = self.sorted_arr[i + 1][1]
+            if not polygon.__equal__(x_cur, x_next):
+                y_x = lambda x: y_cur + (x - x_cur) * (y_next - y_cur) / (x_next - x_cur)
+                section_length = math.sqrt((x_next - x_cur) ** 2 + (y_next - y_cur) ** 2)
+                n = math.ceil(section_length * dpi)
+                if n != 0:
+                    step_x = (x_next - x_cur) / float(n)
+                    step_len = section_length / float(n)
+                    for i in range(0, n):
+                        tmp_x = x_cur + step_x * (i + 0.5)
+                        tmp_y = y_x(tmp_x)
+                        res_arr.insert(0, [tmp_x, tmp_y, step_len])
+            else:
+                section_length = math.sqrt((x_next - x_cur) ** 2 + (y_next - y_cur) ** 2)
+                n = math.ceil(section_length * dpi)
+                if n != 0:
+                    step_p = (y_next - y_cur) / float(n)
+                    step_len = section_length / float(n)
+                    for i in range(0, n):
+                        tmp_y = y_cur + step_p * (i + 0.5)
+                        res_arr.insert(0, [x_cur, tmp_y, step_len])
+        return res_arr
 
