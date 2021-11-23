@@ -31,7 +31,7 @@ Example:
     foo.set_observation_function(func_foo)
     
 `set_green_function(self, func)`
--- sets the Green function, where func is lambda (x, y, t). If not setted, class will use Green function for Laplass equation by default.\
+-- sets the Green function, where func is lambda (x, y, t). If not setted, class will use Green function for Laplass equation by default.
 
 ### Editing areas
 General form of observation areas:
@@ -74,9 +74,10 @@ Possible absense of areas of one of types.
     foo.set_S_0(s_0) 
     # sets a polygon for S_0 area
     
-    f_tmp = lambda x, y, t:  (x * (2.0 - x) + y * (2.0 - y) + 0.1 * t) * 0.01
-    foo.set_observation_function(f_tmp) 
+    func_foo = lambda x, y, t:  (x * (2.0 - x) + y * (2.0 - y) + 0.1 * t) * 0.01
+    foo.set_observation_function(func_foo) 
     # sets observation function
+    # Green function is not setted, so class will use Green function for Laplass equation.
     
     foo.push_observation_area([s_0, [0.0, 0.0]])
     # adds observation area, with the contour, same as S_0, at the moment t = 0
