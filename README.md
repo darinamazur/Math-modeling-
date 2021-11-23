@@ -3,11 +3,6 @@
 ## Class core
 ### Formulation of the problem
 `set_m0_size(self, val)`
--- sets how much first observations will is at `t = 0` moment.
-`def get_m0_size(self)`
-## Class core
-### Formulation of the problem
-`set_m0_size(self, val)`
 -- sets how much first observations will is at `t = 0` moment.\
 `def get_m0_size(self)`
 -- getter.\
@@ -47,15 +42,15 @@ where `(x0, y0), (x1, y1) ... (xn, yn)` is a contour of area,\
 `t_a`, `t_b` - start and final moments of observations, as time range `[t_a, t_b]`
 
 **Warning!** Observations at zero moment should be pushed before all others.\
-Possible absense of areas of one of types.\
+Possible absense of areas of one of types.
 
 `push_observation_area(self, area)`
 -- adds new observation area to the end of list.\
 `get_all_observation_areas(self)`
--- returns list with all observation areas.\
+-- returns list with all observation areas.
 
 `push_modeling_point(self, arr)`
--- adds a points to the list of modeling points. `arr` have form of `[x, y, t]`, where `x, y, t` -- coordinates of the point.\
+-- adds a points to the list of modeling points. `arr` have form of `[x, y, t]`, where `x, y, t` -- coordinates of the point.
 
 ### Solution and visualisation
 `solve(self)`
@@ -67,7 +62,7 @@ Possible absense of areas of one of types.\
 `print_py_plot(self, time, points = 30)`.]\
 -- print a plot of modelled function and observation function. Use only after using `solve(self)`.
 `time` -- a moment of time, when plot should be builded.\
-`points = 30` -- number of points for each axis to build a plot.\
+`points = 30` -- number of points for each axis to build a plot.
 
 ### Example of the program
 
