@@ -1,15 +1,16 @@
-import database
-import tkinter as tk
-from tkinter import*
-from tkinter import ttk
-from tkinter.ttk import Combobox
-from PIL import ImageTk, Image
+from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.messagebox import showinfo
+from PIL import ImageTk, Image
+import additional
 import matplotlib.pyplot as plt
-import matplotlib.widgets as wdg
-import mplcursors
+import matplotlib.widgets as widg
 import numpy as np
+import copy
+import database
+from sympy import *
+from sympy.plotting import plot3d
+from matplotlib import cm
 
 import process
 
@@ -23,8 +24,12 @@ class GUI:
         self.arrS01 = []
         self.arrG1 = []
         self.subS01 = []
-        self.M01 = []
-        self.MG1 = []
+        self.M0x1 = []
+        self.M0y1 = []
+        self.MGx1 = []
+        self.MGy1 = []
+        self.t1 = 0
+        self.t2 = 0
         #for dim 2
 
     fontEx = lambda: "Times 14"
@@ -149,34 +154,51 @@ class GUI:
 
         T_scale.bind("<ButtonRelease-1>", callbackFuncScale)
 
-
         def setS0():
             if self.process.dimension == 2:
                 return
             else:
                 self.arrS01 = []
                 fig, ax = plt.subplots()
-                lines = ax.hlines(y=0, xmin=-10, xmax=10, linewidth=2, color='r')
-                mplcursors.cursor(lines)
-                plt.xlabel("просторова змінна x")
-                plt.ylabel("час t")
-                plt.title('Оберіть 2 точки для задання області на осі Х')
+                major_ticks_x = np.arange(-5, 5, 1)
+                major_ticks_y = np.arange(-2, 2, 1)
+                ax.set_xticks(major_ticks_x)
+                ax.set_yticks(major_ticks_y)
+                plt.xlabel("просторова змінна Х")
+                plt.ylabel("часова змінна t")
+                plt.axhline(y=0, color='pink',linewidth=1.0)
+                y = []
+                cursor = widg.Cursor(ax,
+                                     horizOn=False,
+                                     vertOn=True,
+                                     color='white',
+                                     linewidth=0.1)
                 def onclick(event):
-                    if len(self.arrS01) == 2:
-                       return
                     x1, y1 = event.xdata, event.ydata
-                    if abs(y1) <= 0.001:
-                        plt.plot([x1], [0], marker='o', markersize=7, color="green")
+                    if len(self.arrS01) == 2:
+                        plt.title("Точки успішно обрано!")
+                        ax.set_facecolor("red")
+                        return
+                    if abs(y1) <= 0.05:
                         self.arrS01.append(x1)
+                        y.append(0)
+                        plt.scatter(x1, 0, color='green')
+                        if len(self.arrS01) == 2:
+                            plt.plot(self.arrS01, y, color='green',markersize=7)
+
                 fig.canvas.mpl_connect('button_press_event', onclick)
+                plt.ylim([-2, 2])
+                plt.xlim([-5, 5])
+                plt.title("Оберіть 2 точки для задання області на осі Х")
                 plt.show()
+                self.arrS01.sort()
+
 
 
         but_S0 = Button(self.window1, text="5. Уведіть контур просторової області", fg="purple",
                                 bg="white", font=GUI.fontEx(),
-                                activeforeground='black', command = lambda: setS0())
+                                activeforeground='black',command = setS0)
         but_S0.place(x=30, y=270)
-
 
         def setsubS0():
             if self.process.dimension == 2:
@@ -184,45 +206,195 @@ class GUI:
             else:
                 self.subS01 = []
                 fig, ax = plt.subplots()
-                lines = ax.hlines(y=0, xmin=-10, xmax=10, linewidth=2, color='r')
-                mplcursors.cursor(lines)
-                plt.xlabel("просторова змінна x")
-                plt.ylabel("час t")
-                plt.title('Оберіть 2 точки для задання підобласті на осі Х')
-                plt.plot(self.arrS01, [0,0], marker='o', markersize=7, color="green")
-
+                major_ticks_x = np.arange(-5, 5, 1)
+                major_ticks_y = np.arange(-2, 2, 1)
+                ax.set_xticks(major_ticks_x)
+                ax.set_yticks(major_ticks_y)
+                plt.xlabel("просторова змінна Х")
+                plt.ylabel("часова змінна t")
+                plt.axhline(y=0, color='pink',linewidth=1.0)
+                plt.plot(self.arrS01, [0,0], color='green', marker='o')
+                cursor = widg.Cursor(ax,
+                                     horizOn=False,
+                                     vertOn=True,
+                                     color='white',
+                                     linewidth=0.1)
                 def onclick(event):
-                    if len(self.subS01) == 2:
-                        return
                     x1, y1 = event.xdata, event.ydata
-                    if abs(y1) <= 0.001:
-                        if x1 >= self.arrS01[0] and x1 <= self.arrS01[1]:
-                            plt.plot([x1], [0], marker='*', markersize=7, color="blue")
+                    if len(self.subS01) == 2:
+                        plt.title("Точки успішно обрано!")
+                        ax.set_facecolor("red")
+                        return
+                    if abs(y1) <= 0.05:
+                        if self.arrS01[0] <= x1 <= self.arrS01[1]:
                             self.subS01.append(x1)
+                            plt.scatter(x1, 0, color = 'blue', marker = '*')
+                        if len(self.subS01) == 2:
+                            plt.plot(self.subS01, [0,0], color='blue',marker='*',markersize=7)
 
                 fig.canvas.mpl_connect('button_press_event', onclick)
+                plt.ylim([-2, 2])
+                plt.xlim([-5, 5])
+                plt.title("Оберіть 2 точки на відрізку для задання підобласті на осі Х")
                 plt.show()
 
 
         but_subS0 = Button(self.window1, text="6. Уведіть контур області "
                                               "початкового спостереження", fg="purple",
-                        bg="white", font=GUI.fontEx(),
-                        activeforeground='black', command = lambda: setsubS0())
+                        bg="white", font=GUI.fontEx(),command = setsubS0,
+                        activeforeground='black')
         but_subS0.place(x=30, y=320)
 
+        def Bound():
+            if self.process.dimension == 2:
+                return
+            else:
+                self.arrG1 = []
+                fig, ax = plt.subplots()
+                major_ticks_x = np.arange(-5, 5, 1)
+                major_ticks_y = np.arange(-2, 2, 1)
+                ax.set_xticks(major_ticks_x)
+                ax.set_yticks(major_ticks_y)
+                plt.xlabel("просторова змінна Х")
+                plt.ylabel("часова змінна t")
+                plt.axhline(y=0, color='pink', linewidth=1.0)
+                plt.plot(self.arrS01, [0, 0], color='green', marker='o')
+                plt.plot(self.subS01, [0, 0], color='blue', marker='*', markersize=7)
+                plt.title("Оберіть одну точку, щоб задати крайову область")
+                cursor = widg.Cursor(ax,
+                                     horizOn=False,
+                                     vertOn=True,
+                                     color='white',
+                                     linewidth=0.1)
+                t = []
+                def onclick(event):
+                    x1, y1 = event.xdata, event.ydata
+
+                    if len(self.arrG1) == 1 and len(t) == 2:
+                        plt.title("Точки успішно обрано!")
+                        ax.set_facecolor("red")
+                        return
+                    if len(self.arrG1) == 1:
+                        if len(t) < 2:
+                            if abs(x1-self.arrG1[0]) <= 0.05:
+                                t.append(y1)
+                                plt.scatter(self.arrG1[0], y1, color='orange')
+                        if len(t) == 2:
+                            t.sort()
+                            self.t1 = t[0]
+                            self.t2 = t[1]
+                            plt.plot([self.arrG1[0]]*2, t, color = 'orange', marker = '*', markersize = 7)
+
+                    if abs(y1) <= 0.05 and len(self.arrG1) == 0:
+                        if abs(x1 - self.arrS01[0]) <= 0.05:
+                            self.arrG1.append(self.arrS01[0])
+                            plt.plot(self.arrG1, [0] * len(self.arrG1), color='red', marker='*', markersize=10)
+                            plt.axvline(x=self.arrS01[0], color='black', linewidth=1.0)
+                            plt.axvline(x=self.arrS01[1], color='gray', linewidth=1.0)
+                            plt.title("Оберіть часові обмеження на вертикальній прямій")
+                        elif abs(x1 - self.arrS01[1]) <= 0.05:
+                            self.arrG1.append(self.arrS01[1])
+                            plt.plot(self.arrG1, [0]*len(self.arrG1), color='red', marker='*', markersize=10)
+                            plt.axvline(x=self.arrS01[1], color='black', linewidth=1.0)
+                            plt.axvline(x=self.arrS01[0], color='gray', linewidth=1.0)
+                            plt.title("Оберіть часові обмеження на вертикальній прямій")
+
+                fig.canvas.mpl_connect('button_press_event', onclick)
+                plt.ylim([-2, 2])
+                plt.xlim([-5, 5])
+                plt.show()
+
+
         but_G = Button(self.window1, text="7. Уведіть контур крайового спостереження", fg="purple",
-                        bg="white", font=GUI.fontEx(),
+                        bg="white", font=GUI.fontEx(), command = Bound,
                         activeforeground='black')
         but_G.place(x=30, y=370)
 
+        def M0():
+            if self.process.dimension == 2:
+                return
+            else:
+                self.M0x1 = []
+                self.M0y1 = []
+                fig, ax = plt.subplots()
+                major_ticks_x = np.arange(-5, 5, 1)
+                major_ticks_y = np.arange(-2, 2, 1)
+                ax.set_xticks(major_ticks_x)
+                ax.set_yticks(major_ticks_y)
+                plt.xlabel("просторова змінна Х")
+                plt.ylabel("часова змінна t")
+                plt.axhline(y=0, color='pink',linewidth=1.0)
+                plt.plot(self.arrS01, [0,0], color='green', marker='o')
+                plt.plot(self.subS01, [0,0], color='blue', marker='*', markersize=7)
+                plt.axvline(x=self.arrS01[0], color='black', linewidth=1.0)
+                plt.axvline(x=self.arrS01[1], color='black', linewidth=1.0)
+                cursor = widg.Cursor(ax,
+                                     horizOn=False,
+                                     vertOn=True,
+                                     color='white',
+                                     linewidth=0.1)
+                def onclick(event):
+                    x1, y1 = event.xdata, event.ydata
+                    if self.arrS01[0] < x1 < self.arrS01[1]:
+                        if y1 < 0:
+                            plt.scatter(x1, y1, color='purple')
+                            self.M0x1.append(x1)
+                            self.M0y1.append(y1)
+
+                fig.canvas.mpl_connect('button_press_event', onclick)
+                plt.ylim([-2, 2])
+                plt.xlim([-5, 5])
+                plt.title("Оберіть точки для моделювання зовнішнього\n впливу на початковий стан")
+                plt.show()
+
+
         but_M0 = Button(self.window1, text="8. Уведіть точки моделювання зовнішнього впливу на початковий стан області", fg="purple",
-                       bg="white", font=GUI.fontEx(),
+                       bg="white", font=GUI.fontEx(), command = M0,
                        activeforeground='black')
         but_M0.place(x=30, y=420)
 
+        def Mg():
+            if self.process.dimension == 2:
+                return
+            else:
+                self.Mgx1 = []
+                self.Mgy1 = []
+                fig, ax = plt.subplots()
+                major_ticks_x = np.arange(-5, 5, 1)
+                major_ticks_y = np.arange(-2, 2, 1)
+                ax.set_xticks(major_ticks_x)
+                ax.set_yticks(major_ticks_y)
+                plt.xlabel("просторова змінна Х")
+                plt.ylabel("часова змінна t")
+                plt.axhline(y=0, color='pink', linewidth=1.0)
+                plt.plot(self.arrS01, [0, 0], color='green', marker='o')
+                plt.plot(self.subS01, [0, 0], color='blue', marker='*', markersize=7)
+                plt.axvline(x=self.arrS01[0], color='black', linewidth=1.0)
+                plt.axvline(x=self.arrS01[1], color='black', linewidth=1.0)
+                cursor = widg.Cursor(ax,
+                                     horizOn=False,
+                                     vertOn=True,
+                                     color='white',
+                                     linewidth=0.1)
+
+                def onclick(event):
+                    x1, y1 = event.xdata, event.ydata
+                    if x1 < self.arrS01[0] or x1 > self.arrS01[1]:
+                        if y1 > 0:
+                            plt.scatter(x1, y1, color='lime', marker='*')
+                            self.Mgx1.append(x1)
+                            self.Mgy1.append(y1)
+
+                fig.canvas.mpl_connect('button_press_event', onclick)
+                plt.ylim([-2, 2])
+                plt.xlim([-5, 5])
+                plt.title("Оберіть точки для моделювання зовнішнього\n впливу на початковий стан")
+                plt.show()
+
+
         but_Mg = Button(self.window1, text="9. Уведіть точки моделювання зовнішнього впливу на контур області",
                         fg="purple",
-                        bg="white", font=GUI.fontEx(),
+                        bg="white", font=GUI.fontEx(),command = Mg,
                         activeforeground='black')
         but_Mg.place(x=30, y=470)
 
@@ -277,8 +449,3 @@ class GUI:
 
 gui = GUI()
 gui.Window_1()
-
-
-
-
-
