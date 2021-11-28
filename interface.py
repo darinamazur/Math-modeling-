@@ -748,5 +748,5 @@ class GUI:
         add_win.mainloop()
 
 
-gui = GUI()
-gui.Window_1()
+# gui = GUI()
+# gui.Window_1()
