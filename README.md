@@ -63,7 +63,7 @@ Possible absense of areas of one of types.
 -- get observation areas standard deviation\
 `dpi = 20` -- characterises accuracy of approximation inside calculations\
 `print_py_plot(self, time, dpi = 30)`.]\
--- print a plot of modelled function and observation function. Use only after using `solve(self)`.
+-- print a plot of modelled function and observation function. Use only after using `solve(self)`.\
 `time` -- a moment of time, when plot should be builded.\
 `dpi = 30` -- number of points per one division for all axises in the widest place (min to max).
 
