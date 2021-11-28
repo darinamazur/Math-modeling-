@@ -58,10 +58,10 @@ Possible absense of areas of one of types.
 `get_solution(self)`
 -- returns vector `u`, use only after using `solve(self)`.\
 `get_f_modeled(self, x, y, t)`
--- get a value of modeled function in the point `(x, y, t)`. Use only after using `solve(self)`.
+-- get a value of modeled function in the point `(x, y, t)`. Use only after using `solve(self)`.\
 `get_mistake(self, dpi=20)`
--- get observation areas standard deviation
-`dpi = 20` -- characterises accuracy of approximation inside calculations
+-- get observation areas standard deviation\
+`dpi = 20` -- characterises accuracy of approximation inside calculations\
 `print_py_plot(self, time, dpi = 30)`.]\
 -- print a plot of modelled function and observation function. Use only after using `solve(self)`.
 `time` -- a moment of time, when plot should be builded.\
