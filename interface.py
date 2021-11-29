@@ -31,12 +31,12 @@ class GUI:
         self.t2 = 0#точка для ограничения подконтура по времени верхняя
         #for dim 2
         self.flag = None
-        self.arrS0x2 = []#
-        self.arrS0y2 = []#
+        self.arrS0x2 = []#иксы точек контура
+        self.arrS0y2 = []#игреки точек контура
         self.rectangle = []#если область прямоугольник - одна точка - в массиве координаты икс и игрек
         self.subrectangle = []#подобласть прямоугольника - тоже прямоугольник
-        self.subx2 = []#
-        self.suby2 = []#
+        self.subx2 = []#иксы точек подконтура
+        self.suby2 = []#игреки точек подконтура
         self.lines_eq = []#нужно чтобы попадать точно на линии при вводе подобласти
         self.contour_x = []#точки подконтура - иксы
         self.contour_y = []#точки подконтура - игреки
@@ -296,10 +296,12 @@ class GUI:
 
                 def change_poly():
                     but_poly.configure(bg="skyblue")
+                    but_rec.configure(bg="white")
                     self.flag = 1
 
                 def change_rec():
                     but_rec.configure(bg="skyblue")
+                    but_poly.configure(bg="white")
                     self.flag = 0
 
                 but_rec = Button(choose_setS0_win, text=" Прямокутник ", fg="blue",
@@ -522,7 +524,7 @@ class GUI:
                 plt.show()
 
                 time_window = Tk()
-                time_window.geometry("210x100")
+                time_window.geometry("400x100")
                 time_window.resizable(width=False, height=False)
                 time_window.title(f'Оберіть часові обмеження для крайової області')
                 time_window.configure(background='white')
@@ -542,11 +544,11 @@ class GUI:
                 bt = Button(time_window, text='Застосувати', activeforeground='blue', fg='blue',
                              command=nextt, font=fnt)
 
-                lb1.grid(row=0, column=1)
-                txt1.grid(row=0, column=2)
-                lb2.grid(row=1, column=1)
-                txt2.grid(row=1, column=2)
-                bt.grid(row=2,column=2, columnspan=2)
+                lb1.grid(row=0, column=1, columnspan=2)
+                txt1.grid(row=0, column=3, columnspan=2)
+                lb2.grid(row=1, column=1, columnspan=2)
+                txt2.grid(row=1, column=3, columnspan=2)
+                bt.grid(row=2,column=2, columnspan=3)
                 time_window.mainloop()
 
             else:
@@ -748,5 +750,5 @@ class GUI:
         add_win.mainloop()
 
 
-# gui = GUI()
-# gui.Window_1()
+gui = GUI()
+gui.Window_1()
