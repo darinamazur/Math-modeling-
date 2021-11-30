@@ -178,8 +178,8 @@ class GUI:
                     self.arrS0x2 = []
                     self.arrS0y2 = []
                     fig, ax = plt.subplots()
-                    major_ticks_x = np.arange(-1, 10, 1)
-                    major_ticks_y = np.arange(-1, 4, 1)
+                    major_ticks_x = np.arange(-5, 5, 1)
+                    major_ticks_y = np.arange(-2, 2, 1)
                     ax.set_xticks(major_ticks_x)
                     ax.set_yticks(major_ticks_y)
                     plt.xlabel("просторова змінна Х")
@@ -622,7 +622,93 @@ class GUI:
 
         def M0():
             if self.process.dimension == 2:
-                return
+                self.M0x2 = []
+                self.M0y2 = []
+                self.M0z2 = []
+                fig, ax = plt.subplots()
+                if self.flag == 1:
+                    major_ticks_x = np.arange(-5, 5, 1)
+                    major_ticks_y = np.arange(-2, 2, 1)
+                else:
+                    major_ticks_x = np.arange(-1, 10, 1)
+                    major_ticks_y = np.arange(-1, 4, 1)
+                ax.set_xticks(major_ticks_x)
+                ax.set_yticks(major_ticks_y)
+                plt.xlabel("просторова змінна Х")
+                plt.ylabel("просторова змінна Y")
+                plt.plot(self.arrS0x2, self.arrS0y2, color='blue', marker='*')
+                plt.plot(self.subx2, self.suby2, color='green', marker='o')
+                cursor = widg.Cursor(ax,
+                                     horizOn=False,
+                                     vertOn=True,
+                                     color='white',
+                                     linewidth=0.1)
+                lines = []
+                print(self.lines_eq)
+
+                def onclick(event):
+                    x1, y1 = event.xdata, event.ydata
+                    plt.scatter(x1, y1, color='purple', marker='*')
+                    self.M0x2.append(x1)
+                    self.M0y2.append(y1)
+
+
+                fig.canvas.mpl_connect('button_press_event', onclick)
+                if self.flag == 1:
+                    plt.ylim([-2, 2])
+                    plt.xlim([-5, 5])
+                else:
+                    plt.ylim([-1, 4])
+                    plt.xlim([-1, 10])
+                plt.title("Оберіть точки моделювання зовнішньоговпливу \nна початковий стан (проекції на вісь OZ) усередині області")
+                plt.show()
+
+                z_window = Tk()
+                n = len(self.M0x2)
+                self.M0z2 = [0] * n
+                k = 1
+                if n > 10:
+                    k = int(n / 10 + 1)
+                h = n + 1
+                if n <= 10:
+                    h = n + 1
+                else:
+                    h = 11
+                z_window.geometry(f"{400 * k}x{50 * h + 5}")
+                # z_window.resizable(width=False, height=False)
+                z_window.title(f'Оберіть ординати введених точок (> 0)')
+                z_window.configure(background='white')
+                z_window.attributes("-topmost", True)
+                fnt = 'Times 15'
+                scales = []
+                lbls = []
+                for i in range(0, n):
+                    scales.append(Scale(z_window, from_=-50, to=-0.1, orient='horizontal', resolution=0.1,
+                                        activebackground='deepskyblue', bd=2, background='white', font=GUI.fontEx(),
+                                        length=250, highlightcolor='pink', fg='blue', troughcolor='floralwhite'))
+
+                    lbls.append(Label(z_window, width=10, height=1, text=f'M0[{i}]_z =', font=fnt))
+
+                def nextt():
+                    z_window.destroy()
+
+                bt = Button(z_window, text='Застосувати', activeforeground='blue', fg='blue',
+                            command=nextt, font=fnt)
+
+                def callbackFuncScale(event):
+                    for i in range(0, n):
+                        self.M0z2[i] = scales[i].get()
+
+                for i in range(0, n):
+                    scales[i].bind("<ButtonRelease-1>", callbackFuncScale)
+
+                for i in range(0, n):
+                    lbls[i].grid(row=i - 10*(i//10), column=3 + 10*(i//10), columnspan=3)
+                    scales[i].grid(row=i - 10*(i//10), column=7 + 10*(i//10), columnspan=3)
+
+                bt.grid(row=n + 1, column=2, columnspan=3)
+                z_window.mainloop()
+
             else:
                 self.M0x1 = []
                 self.M0y1 = []
@@ -665,7 +751,92 @@ class GUI:
 
         def Mg():
             if self.process.dimension == 2:
-                return
+                self.Mgx2 = []
+                self.Mgy2 = []
+                self.Mgz2 = []
+                fig, ax = plt.subplots()
+                if self.flag == 1:
+                    major_ticks_x = np.arange(-5, 5, 1)
+                    major_ticks_y = np.arange(-2, 2, 1)
+                else:
+                    major_ticks_x = np.arange(-1, 10, 1)
+                    major_ticks_y = np.arange(-1, 4, 1)
+                ax.set_xticks(major_ticks_x)
+                ax.set_yticks(major_ticks_y)
+                plt.xlabel("просторова змінна Х")
+                plt.ylabel("просторова змінна Y")
+                plt.plot(self.arrS0x2, self.arrS0y2, color='blue', marker='*')
+                plt.plot(self.subx2, self.suby2, color='green', marker='o')
+                cursor = widg.Cursor(ax,
+                                     horizOn=False,
+                                     vertOn=True,
+                                     color='white',
+                                     linewidth=0.1)
+                lines = []
+                print(self.lines_eq)
+
+                def onclick(event):
+                    x1, y1 = event.xdata, event.ydata
+                    plt.scatter(x1, y1, color='lime', marker='*')
+                    self.Mgx2.append(x1)
+                    self.Mgy2.append(y1)
+
+                fig.canvas.mpl_connect('button_press_event', onclick)
+                if self.flag == 1:
+                    plt.ylim([-2, 2])
+                    plt.xlim([-5, 5])
+                else:
+                    plt.ylim([-1, 4])
+                    plt.xlim([-1, 10])
+                plt.title(
+                    "Оберіть точки моделювання зовнішньоговпливу \nна контур області (проекції на вісь OZ) поза областю")
+                plt.show()
+
+                z_window = Tk()
+                n = len(self.Mgx2)
+                self.Mgz2 = [0] * n
+                k = 1
+                if n > 10 :
+                    k = int(n/10 + 1)
+                h = n + 1
+                if n <= 10:
+                    h = n + 1
+                else: h = 11
+                z_window.geometry(f"{400*k}x{50*h+5}")
+                z_window.resizable(width=False, height=False)
+                z_window.title(f'Оберіть ординати введених точок (> 0)')
+                z_window.configure(background='white')
+                z_window.attributes("-topmost", True)
+                fnt = 'Times 15'
+                scales = []
+                lbls = []
+                for i in range(0, n):
+                    scales.append(Scale(z_window, from_=0.1, to=self.process.T, orient='horizontal', resolution=0.1,
+                                        activebackground='deepskyblue', bd=2, background='white', font=GUI.fontEx(),
+                                        length=250, highlightcolor='pink', fg='blue', troughcolor='floralwhite'))
+
+                    lbls.append(Label(z_window, width=10, height=1, text=f'Mg[{i}]_z =', font=fnt))
+
+                def nextt():
+                    z_window.destroy()
+
+                bt = Button(z_window, text='Застосувати', activeforeground='blue', fg='blue',
+                            command=nextt, font=fnt)
+
+                def callbackFuncScale(event):
+                    for i in range(0, n):
+                        self.Mgz2[i] = scales[i].get()
+
+                for i in range(0, n):
+                    scales[i].bind("<ButtonRelease-1>", callbackFuncScale)
+
+                for i in range(0, n):
+                    lbls[i].grid(row=i - 10 * (i // 10), column=3 + 10 * (i // 10), columnspan=3)
+                    scales[i].grid(row=i - 10 * (i // 10), column=7 + 10 * (i // 10), columnspan=3)
+
+                bt.grid(row=n + 1, column=2, columnspan=3)
+                z_window.mainloop()
+
             else:
                 self.Mgx1 = []
                 self.Mgy1 = []
