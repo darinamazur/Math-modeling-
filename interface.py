@@ -878,7 +878,7 @@ class GUI:
         but_res = Button(self.window1, text="Отримати результат",
                         fg="blue",
                         bg="white", font='Times 15 bold italic',
-                        activeforeground='black', command = self.window1.destroy)
+                        activeforeground='black', command = self.calculate)
         but_res.place(relx = 0.5, y = 540, anchor = 'center')
 
 
@@ -922,3 +922,7 @@ class GUI:
                           activeforeground='black', command=lambda: update_txt())
         but_exit.pack(pady=30)
         add_win.mainloop()
+
+    def calculate(self):
+        print('hi')
+        print(self.process)
