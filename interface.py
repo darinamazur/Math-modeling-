@@ -671,7 +671,7 @@ class GUI:
                 else:
                     h = 11
                 z_window.geometry(f"{400 * k}x{50 * h + 5}")
-                # z_window.resizable(width=False, height=False)
+                z_window.resizable(width=False, height=False)
                 z_window.title(f'Оберіть ординати введених точок (> 0)')
                 z_window.configure(background='white')
                 z_window.attributes("-topmost", True)
