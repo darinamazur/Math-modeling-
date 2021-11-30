@@ -2,15 +2,11 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.messagebox import showinfo
 from PIL import ImageTk, Image
-import additional
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widg
 import numpy as np
-import copy
 import database
-from sympy import *
-from sympy.plotting import plot3d
-from matplotlib import cm
+
 
 import process
 
@@ -926,7 +922,3 @@ class GUI:
                           activeforeground='black', command=lambda: update_txt())
         but_exit.pack(pady=30)
         add_win.mainloop()
-
-
-gui = GUI()
-gui.Window_1()
