@@ -924,77 +924,80 @@ class GUI:
         add_win.mainloop()
 
     def calculate(self):
-        S_0 = []
-        obs_area_0 = []
-        obs_area_g = []
-        t_a = 0
-        t_b = 0
-        m_0_points = []
-        m_g_points = []
+        if self.process.dimension == 2:
+            S_0 = []
+            obs_area_0 = []
+            obs_area_g = []
+            t_a = 0
+            t_b = 0
+            m_0_points = []
+            m_g_points = []
 
-        if len(self.rectangle) != 0:
-            x_rect = self.rectangle[0]
-            y_rect = self.rectangle[0]
-            S_0 = [[0, 0], [0, y_rect], [x_rect, y_rect], [x_rect, 0]]
-            x_subrect = self.subrectangle[0]
-            y_subrect = self.subrectangle[0]
-            obs_area_0 = [[0, 0], [0, y_subrect], [x_subrect, y_subrect], [x_subrect, 0]]
+            if len(self.rectangle) != 0:
+                x_rect = self.rectangle[0]
+                y_rect = self.rectangle[0]
+                S_0 = [[0, 0], [0, y_rect], [x_rect, y_rect], [x_rect, 0]]
+                x_subrect = self.subrectangle[0]
+                y_subrect = self.subrectangle[1]
+                obs_area_0 = [[0, 0], [0, y_subrect], [x_subrect, y_subrect], [x_subrect, 0]]
+            else:
+                for i in range(0, len(self.arrS0x2)):
+                    S_0.append([self.arrS0x2[i], self.arrS0y2[i]])
+                for i in range(0, len(self.subx2)):
+                    obs_area_0.append([self.subx2[i], self.suby2[i]])
+            for i in range(0, len(self.contour_x)):
+                obs_area_g.append([self.contour_x[i], self.contour_y[i]])
+            t_a = self.t1
+            t_b = self.t2
+
+            for i in range(0, len(self.M0x2)):
+                m_0_points.append([self.M0x2[i], self.M0y2[i], self.M0z2[i]])
+            for i in range(0, len(self.Mgx2)):
+                m_g_points.append([self.Mgx2[i], self.Mgy2[i], self.Mgz2[i]])
+
+            c = core.core()
+            c.set_T(self.process.T)
+            c.set_S_0(S_0)
+            if self.process.func == "x+y+t":
+                func_tmp = lambda x, y, t: x + y + t
+                c.set_observation_function(func_tmp)
+            elif self.process.func == "t*(sin(x)+cos(y))":
+                func_tmp = lambda x, y, t: t * (np.sin(x) + np.cos(y))
+                c.set_observation_function(func_tmp)
+            elif self.process.func == "0.001*cos(x)*cos(y)*cos(t)":
+                func_tmp = lambda x, y, t: 0.001 * np.cos(x) * np.cos(y) * np.cos(t)
+                c.set_observation_function(func_tmp)
+            else:
+                func_tmp = lambda x, y, t: 0
+                c.set_observation_function(func_tmp)
+
+            if self.process.green == "1/(2*pi)*ln(1/r)":
+                func_tmp = lambda x, y, t: 1 / (2 * math.pi) * math.log(1 / math.sqrt(x ** 2 + y ** 2))
+                c.set_green_function(func_tmp)
+            elif self.process.green == "H(t-r/c)/(2*pi*c*sqrt(c^2*t^2-r^2))":
+                cons = self.process.const
+                func_tmp = lambda x, y, t: np.heaviside(t - math.sqrt(x ** 2 + y ** 2) / cons, 1) / (
+                            2 * math.pi * cons * math.sqrt(cons ** 2 * t ** 2 - (x ** 2 + y ** 2) ** 2))
+                c.set_green_function(func_tmp)
+            else:
+                func_tmp = lambda x, y, t: 0
+                c.set_green_function(func_tmp)
+
+            c.push_observation_area([obs_area_0, [0.0, 0.0]])
+            c.push_observation_area([obs_area_g, [t_a, t_b]])
+            c.set_m0_size(len(m_0_points))
+            for i in range(0, len(m_0_points)):
+                c.push_modeling_point(m_0_points[i])
+            for i in range(0, len(m_g_points)):
+                c.push_modeling_point(m_g_points[i])
+
+            c.solve()
+            c.print_py_plot(0)
+            c.print_py_plot(t_a)
+            c.print_py_plot((t_a + t_b) * 0.5)
+            c.print_py_plot(t_b)
         else:
-            for i in range(0, len(self.arrS0x2)):
-                S_0.append([self.arrS0x2[i], self.arrS0y2[i]])
-            for i in range(0, len(self.subx2)):
-                obs_area_0.append([self.subx2[i], self.suby2[i]])
-        for i in range(0, len(self.contour_x)):
-            obs_area_g.append([self.contour_x[i], self.contour_y[i]])
-        t_a = self.t1
-        t_b = self.t2
-
-        for i in range(0, len(self.M0x2)):
-            m_0_points.append([self.M0x2[i], self.M0y2[i], self.M0z2[i]])
-        for i in range(0, len(self.Mgx2)):
-            m_g_points.append([self.Mgx2[i], self.Mgy2[i], self.Mgz2[i]])
-
-        c = core.core()
-        c.set_T(self.process.T)
-        c.set_S_0(S_0)
-        if self.process.func == "x+y+t":
-            func_tmp = lambda x, y, t: x + y + t
-            c.set_observation_function(func_tmp)
-        elif self.process.func == "t*(sin(x)+cos(y))":
-            func_tmp = lambda x, y, t: t * (np.sin(x) + np.cos(y))
-            c.set_observation_function(func_tmp)
-        elif self.process.func == "0.001*cos(x)*cos(y)*cos(t)":
-            func_tmp = lambda x, y, t: 0.001 * np.cos(x) * np.cos(y) * np.cos(t)
-            c.set_observation_function(func_tmp)
-        else:
-            func_tmp = lambda x, y, t: 0
-            c.set_observation_function(func_tmp)
-
-        if self.process.green == "1/(2*pi)*ln(1/r)":
-            func_tmp = lambda x, y, t: 1 / (2 * math.pi) * math.log(1 / math.sqrt(x ** 2 + y ** 2))
-            c.set_green_function(func_tmp)
-        elif self.process.green == "H(t-r/c)/(2*pi*c*sqrt(c^2*t^2-r^2))":
-            cons = self.process.const
-            func_tmp = lambda x, y, t: np.heaviside(t - math.sqrt(x ** 2 + y ** 2) / cons, 1) / (
-                        2 * math.pi * cons * math.sqrt(cons ** 2 * t ** 2 - (x ** 2 + y ** 2) ** 2))
-            c.set_green_function(func_tmp)
-        else:
-            func_tmp = lambda x, y, t: 0
-            c.set_green_function(func_tmp)
-
-        c.push_observation_area([obs_area_0, [0.0, 0.0]])
-        c.push_observation_area([obs_area_g, [t_a, t_b]])
-        c.set_m0_size(len(m_0_points))
-        for i in range(0, len(m_0_points)):
-            c.push_modeling_point(m_0_points[i])
-        for i in range(0, len(m_g_points)):
-            c.push_modeling_point(m_g_points[i])
-
-        c.solve()
-        c.print_py_plot(0)
-        c.print_py_plot(t_a)
-        c.print_py_plot((t_a + t_b) * 0.5)
-        c.print_py_plot(t_b)
+            return
 
 gui = GUI()
 gui.Window_1()
