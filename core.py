@@ -4,6 +4,8 @@ import polygon
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib
+import scipy
+from sympy.utilities.lambdify import lambdify, implemented_function
 from matplotlib.ticker import LinearLocator
 
 class core:
@@ -476,8 +478,124 @@ class core:
 
         return float(res)
 
+    def set_dimension(self, val):
+        self.dimension = val
 
+    def get_dimension(self):
+        return self.dimension
 
+    def set_arrS01(self, arrS01):
+        self.arrS01 = arrS01
+    def set_arrG1(self, arrG1):
+        self.arrG1 = arrG1
+    def set_subS01(self, subS01):
+        self.subS01 = subS01
+    def set_M0(self, M0x1, M0y1):
+        self.M0x1 = M0x1
+        self.M0y1 = M0y1
+    def set_Mg(self, MGx1, MGy1):
+        self.MGx1 = MGx1
+        self.MGy1 = MGy1
+    def set_t_dim_1(self, t1, t2):
+        self.t1 = t1
+        self.t2 = t2
+
+    def get_interal_1_dim1(self, i, j):
+        func = lambda x: self.get_B_i_j_x_dim1(i, 1, x, 0) * self.get_B_i_j_x_dim1(1, j, x, 0)
+        return self.Integral_dim1([0, 0], self.subS01[0], self.subS01[1], func)
+
+    def get_interal_2_dim1(self, i, j):
+        func = lambda t: self.get_B_i_j_x_dim1(i, 2, self.arrG1[0], t) * self.get_B_i_j_x_dim1(2, j, self.arrG1[0], t)
+        return self.Integral_t_dim1(self.t1, self.t2, func)
+
+    def get_y_interal_1_dim1(self, i):
+        func = lambda x: self.get_B_i_j_x_dim1(i, 1, x, 0) * self.get_Y_obs_dim1(x, 0)
+        return self.Integral_dim1([0, 0], self.subS01[0], self.subS01[1], func)
+
+    def get_y_interal_2_dim1(self, i):
+        func = lambda t: self.get_B_i_j_x_dim1(i, 2, self.arrG1[0], t) * self.get_Y_obs_dim1(self.arrG1[0], t)
+        return self.Integral_t_dim1(self.t1, self.t2, func)
+
+    def get_B_i_j_x_dim1(self, i, j, x, t):
+        print(self.M0x1)
+        print(self.M0y1)
+        print(self.MGx1)
+        print(self.MGy1)
+        if i == 1:
+            return self.get_G_dim1(x - self.M0x1[0], t - self.M0y1[0])
+        elif i == 2:
+            return self.get_G_dim1(x - self.MGx1[0], t - self.MGy1[0])
+        return 0
+
+    def get_Y_obs_dim1(self, x, t):
+        return self.obs_func_dim1(x, t)
+
+    def P_i_j_dim1(self, i, j):
+        sum = 0
+        sum += self.get_interal_1_dim1(i, j)
+        sum += self.get_interal_2_dim1(i, j)
+        return sum
+
+    def Y_i_dim1(self, i):
+        sum = 0
+        sum += self.get_y_interal_1_dim1(i)
+        sum += self.get_y_interal_2_dim1(i)
+        return sum
+
+    def solve_dim1(self):
+        P = numpy.zeros((2, 2))
+        Y = numpy.zeros((2, 1))
+        for i in range(0, 2):
+            for j in range(0, 2):
+                P[i, j] = self.P_i_j_dim1(i, j)
+        for i in range(0, 2):
+            Y[i, 0] = self.Y_i_dim1(i)
+        print(P)
+        print(Y)
+        solve_vec = numpy.linalg.solve(P, Y)
+        self.vecF = solve_vec
+        print(solve_vec)
+
+    def Integral_t(self, x1, t1, t2, func):
+        k = 0
+        b = x1
+        new_func = func.subs(self.x, b)
+        res = scipy.integrate.quad(lambdify(self.t, new_func), t1, t2)[0]
+        return res
+
+    def Integral(self, line, a, b_, func):
+        k = line[1]
+        b = line[0]
+        new_func = math.sqrt(1 + k ** 2) * (func.subs(self.y, k * self.x + b))
+        res = scipy.integrate.quad(lambdify(self.x, new_func), a, b_)[0]
+        return res
+
+    def Integral_dim1(self, line, a, b_, func):
+        k = line[1]
+        b = line[0]
+        sum = 0
+        n = 30
+        step = (b_ - a) / n
+        for i in range(0, n):
+            sum += func(a + step * (i + 0.5)) * step
+        return sum
+
+    def Integral_t_dim1(self, t1, t2, func):
+        sum = 0
+        n = 30
+        step = (t2 - t1) / n
+        for i in range(0, n):
+            sum += func(t1 + step * (i + 0.5)) * step
+        return sum
+
+    def set_observation_function_dim1(self, func):
+        self.obs_func_dim1 = func
+
+    def set_green_function_dim1(self, func):
+        self.green_dim1 = func
+
+    def get_G_dim1(self, x, t):
+        return self.green_dim1(x, t)
 
 
 

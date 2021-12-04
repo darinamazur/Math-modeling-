@@ -834,8 +834,8 @@ class GUI:
                 z_window.mainloop()
 
             else:
-                self.Mgx1 = []
-                self.Mgy1 = []
+                # self.Mgx1 = []
+                # self.Mgy1 = []
                 fig, ax = plt.subplots()
                 major_ticks_x = np.arange(-5, 5, 1)
                 major_ticks_y = np.arange(-2, 2, 1)
@@ -997,7 +997,57 @@ class GUI:
             c.print_py_plot((t_a + t_b) * 0.5)
             c.print_py_plot(t_b)
         else:
-            return
+            c = core.core()
+            c.set_dimension(1)
+            c.set_arrS01(self.arrS01)
+            c.set_arrG1(self.arrG1)
+            c.set_subS01(self.subS01)
+            print(self.M0x1, self.M0y1)
+            c.set_M0(self.M0x1, self.M0y1)
+            print(self.MGx1, self.MGy1)
+            c.set_Mg(self.MGx1, self.MGy1)
+            c.set_t_dim_1(self.t1, self.t2)
+            c.set_T(self.process.T)
+
+            if self.process.func == "x+t":
+                func_tmp = lambda x, t: x + t
+                c.set_observation_function_dim1(func_tmp)
+            elif self.process.func == "sin(x*t)":
+                func_tmp = lambda x, t: np.sin(x*t)
+                c.set_observation_function_dim1(func_tmp)
+            elif self.process.func == "0.001*x":
+                func_tmp = lambda x, t: 0.001*x
+                c.set_observation_function_dim1(func_tmp)
+            elif self.process.func == "0.001*sin(x)":
+                func_tmp = lambda x, t: 0.001 * np.sin(x)
+                c.set_observation_function_dim1(func_tmp)
+            elif self.process.func == "0.001*sin(x)*sin(t)":
+                func_tmp = lambda x, t: 0.001 * np.sin(x) * np.sin(t)
+                c.set_observation_function_dim1(func_tmp)
+            else:
+                func_tmp = lambda x, t: x + t
+                c.set_observation_function_dim1(func_tmp)
+
+            if self.process.green == "-r/2":
+                func_tmp = lambda x, t: - 0.5 * x**2
+                c.set_green_function_dim1(func_tmp)
+            elif self.process.green == "H(t-r/c)/(2*c)":
+                cons = self.process.const
+                func_tmp = lambda x, t: np.heaviside(t - abs(x) / cons, 0) / (2 * cons)
+                c.set_green_function_dim1(func_tmp)
+            elif self.process.green == "H(t)/(4*pi*k*t)^(-1/2)*exp((x^2)/4*k*t)":
+                cons = self.process.const
+                func_tmp = lambda x, t: np.heaviside(t, 0) / (4 * math.pi * cons * t) ** (-0.5) * np.exp((x ** 2) / (4 * cons * t))
+                c.set_green_function_dim1(func_tmp)
+            else:
+                func_tmp = lambda x, t: 0
+                c.set_green_function_dim1(func_tmp)
+
+
+
+
+            c.solve_dim1()
+            return 1
 
 gui = GUI()
 gui.Window_1()
