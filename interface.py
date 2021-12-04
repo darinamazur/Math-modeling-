@@ -21,8 +21,8 @@ class GUI:
         self.subS01 = []#две точки внутри главной области (посортированы)
         self.M0x1 = []#точки для зовнишнього впливу на початковий стан - иксы
         self.M0y1 = []#точки для зовнишнього впливу на початковий стан - игреки
-        self.MGx1 = []#точки для зовнишнього впливу на область контуру - иксы
-        self.MGy1 = []#точки для зовнишнього впливу на область контуру - игреки
+        self.Mgx1 = []#точки для зовнишнього впливу на область контуру - иксы
+        self.Mgy1 = []#точки для зовнишнього впливу на область контуру - игреки
         self.t1 = 0#точка для ограничения подконтура по времени нижняя
         self.t2 = 0#точка для ограничения подконтура по времени верхняя
         #for dim 2
@@ -834,8 +834,8 @@ class GUI:
                 z_window.mainloop()
 
             else:
-                # self.Mgx1 = []
-                # self.Mgy1 = []
+                self.Mgx1 = []
+                self.Mgy1 = []
                 fig, ax = plt.subplots()
                 major_ticks_x = np.arange(-5, 5, 1)
                 major_ticks_y = np.arange(-2, 2, 1)
@@ -1004,8 +1004,8 @@ class GUI:
             c.set_subS01(self.subS01)
             print(self.M0x1, self.M0y1)
             c.set_M0(self.M0x1, self.M0y1)
-            print(self.MGx1, self.MGy1)
-            c.set_Mg(self.MGx1, self.MGy1)
+            print(self.Mgx1, self.Mgy1)
+            c.set_Mg(self.Mgx1, self.Mgy1)
             c.set_t_dim_1(self.t1, self.t2)
             c.set_T(self.process.T)
 
@@ -1042,8 +1042,6 @@ class GUI:
             else:
                 func_tmp = lambda x, t: 0
                 c.set_green_function_dim1(func_tmp)
-
-
 
 
             c.solve_dim1()
