@@ -501,11 +501,15 @@ class core:
         self.t2 = t2
 
     def get_interal_1_dim1(self, i, j):
-        func = lambda x: self.get_B_i_j_x_dim1(i, 1, x, 0) * self.get_B_i_j_x_dim1(1, j, x, 0)
+        # func = lambda x: self.get_B_i_j_x_dim1(i, 1, x, 0) * self.get_B_i_j_x_dim1(1, j, x, 0)
+        func = lambda x: self.get_B_i_j_x_dim1(1, i, x, 0) * self.get_B_i_j_x_dim1(1, j, x, 0)
+        print(f'integral zero i: {i} j: {j} res: {self.Integral_dim1([0, 0], self.subS01[0], self.subS01[1], func)}')
         return self.Integral_dim1([0, 0], self.subS01[0], self.subS01[1], func)
 
     def get_interal_2_dim1(self, i, j):
-        func = lambda t: self.get_B_i_j_x_dim1(i, 2, self.arrG1[0], t) * self.get_B_i_j_x_dim1(2, j, self.arrG1[0], t)
+        # func = lambda t: self.get_B_i_j_x_dim1(i, 2, self.arrG1[0], t) * self.get_B_i_j_x_dim1(2, j, self.arrG1[0], t)
+        func = lambda t: self.get_B_i_j_x_dim1(2, i, self.arrG1[0], t) * self.get_B_i_j_x_dim1(2, j, self.arrG1[0], t)
+        print(f'integral gran i: {i} j: {j} res: {self.Integral_dim1([0, 0], self.subS01[0], self.subS01[1], func)}')
         return self.Integral_t_dim1(self.t1, self.t2, func)
 
     def get_y_interal_1_dim1(self, i):
@@ -517,13 +521,9 @@ class core:
         return self.Integral_t_dim1(self.t1, self.t2, func)
 
     def get_B_i_j_x_dim1(self, i, j, x, t):
-        print(self.M0x1)
-        print(self.M0y1)
-        print(self.MGx1)
-        print(self.MGy1)
-        if i == 1:
+        if j == 1:
             return self.get_G_dim1(x - self.M0x1[0], t - self.M0y1[0])
-        elif i == 2:
+        elif j == 2:
             return self.get_G_dim1(x - self.MGx1[0], t - self.MGy1[0])
         return 0
 
@@ -547,9 +547,9 @@ class core:
         Y = numpy.zeros((2, 1))
         for i in range(0, 2):
             for j in range(0, 2):
-                P[i, j] = self.P_i_j_dim1(i, j)
+                P[i, j] = self.P_i_j_dim1(i + 1, j + 1)
         for i in range(0, 2):
-            Y[i, 0] = self.Y_i_dim1(i)
+            Y[i, 0] = self.Y_i_dim1(i + 1)
         print(P)
         print(Y)
         solve_vec = numpy.linalg.solve(P, Y)
@@ -588,6 +588,7 @@ class core:
             sum += func(t1 + step * (i + 0.5)) * step
         return sum
 
+
     def set_observation_function_dim1(self, func):
         self.obs_func_dim1 = func
 
@@ -597,6 +598,51 @@ class core:
     def get_G_dim1(self, x, t):
         return self.green_dim1(x, t)
 
+    def print_py_plot_dim1(self):
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=(12, 7))
+
+        x_count = [self.arrS01[0], self.arrS01[0], self.arrS01[1], self.arrS01[1]]
+        y_count = [0, self.T, self.T, 0]
+        S_0_cont = ax.plot(x_count, y_count, color='red', linewidth=1.5, zorder=10, label='Контур S_0^T', alpha=0.7)
+
+        x_1 = numpy.linspace(self.arrS01[0], self.arrS01[1])
+        t_1 = numpy.zeros(x_1.shape)
+        Z = self.get_f_modeled_arr_dim1(x_1, t_1)
+        Z_1 = self.get_f_original_arr_dim1(x_1, t_1)
+
+        t_2 = numpy.linspace(self.t1, self.t2)
+        x_2 = numpy.full(t_2.shape, self.arrG1[0])
+        Z_2 = self.get_f_modeled_arr_dim1(x_2, t_2)
+        Z_3 = self.get_f_original_arr_dim1(x_2, t_2)
+
+        surf_modeled = ax.plot(x_1, t_1, Z, color='blue', zorder=0, label='Змодельовано')
+        surf_observ = ax.plot(x_1, t_1, Z_1, color='green', zorder=0, label='Спостереження')
+        surf_modeled = ax.plot(x_2, t_2, Z_2, color='blue', zorder=0, label='Змодельовано')
+        surf_observ = ax.plot(x_2, t_2, Z_3, color='green', zorder=0, label='Спостереження')
+        ax.legend()
+
+        # plt.title(f't = {t} mistake = {self.get_mistake()}')
+        plt.xlabel('x')
+        plt.ylabel('t')
+        plt.show()
+
+    def get_f_modeled_dim1(self, x, t):
+        sum = 0
+        sum += self.get_G_dim1(x - self.M0x1[0], t - self.M0y1[0]) * self.vecF[0]
+        sum += self.get_G_dim1(x - self.MGx1[0], t - self.MGy1[0]) * self.vecF[1]
+        return sum
+
+    def get_f_modeled_arr_dim1(self, x, t):
+        res = numpy.zeros(x.shape)
+        for i in range(0, x.shape[0]):
+            res[i] = self.get_f_modeled_dim1(x[i], t[i])
+        return res
+
+    def get_f_original_arr_dim1(self, x, t):
+        res = numpy.zeros(x.shape)
+        for i in range(0, x.shape[0]):
+            res[i] = self.obs_func_dim1(x[i], t[i])
+        return res
 
 
 

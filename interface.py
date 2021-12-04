@@ -1029,7 +1029,7 @@ class GUI:
                 c.set_observation_function_dim1(func_tmp)
 
             if self.process.green == "-r/2":
-                func_tmp = lambda x, t: - 0.5 * x**2
+                func_tmp = lambda x, t: - 0.5 * abs(x)
                 c.set_green_function_dim1(func_tmp)
             elif self.process.green == "H(t-r/c)/(2*c)":
                 cons = self.process.const
@@ -1043,9 +1043,8 @@ class GUI:
                 func_tmp = lambda x, t: 0
                 c.set_green_function_dim1(func_tmp)
 
-
             c.solve_dim1()
-            return 1
+            c.print_py_plot_dim1()
 
 gui = GUI()
 gui.Window_1()
