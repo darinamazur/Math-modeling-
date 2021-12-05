@@ -601,8 +601,8 @@ class core:
     def print_py_plot_dim1(self):
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=(12, 7))
 
-        x_count = [self.arrS01[0], self.arrS01[0], self.arrS01[1], self.arrS01[1]]
-        y_count = [0, self.T, self.T, 0]
+        x_count = [self.arrS01[0], self.arrS01[0], self.arrS01[1], self.arrS01[1], self.arrS01[0]]
+        y_count = [0, self.T, self.T, 0, 0]
         S_0_cont = ax.plot(x_count, y_count, color='red', linewidth=1.5, zorder=10, label='Контур S_0^T', alpha=0.7)
 
         x_1 = numpy.linspace(self.arrS01[0], self.arrS01[1])
